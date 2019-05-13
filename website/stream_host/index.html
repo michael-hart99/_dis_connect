@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html style="height: 100%; overflow: hidden; margin:0; background-color: black">
+<head>
+    <meta charset="utf-8">
+    <title>(dis)connect stream</title>
+    <style>
+    body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      margin: 0;
+    }
+    .outer-window {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      margin: 0
+    }
+    .audience-stream {
+      width: 33%;
+      height: 100%;
+    }
+    .video-line {
+      height: 33%;
+    }
+    </style>
+</head>
+
+<body style="">
+<div id="video-grid" class="outer-window">
+    <div id="line1" class="video-line">
+      <video id="stream1" class="audience-stream" autoplay muted playsinline>
+       </video>
+      <video id="stream2" class="audience-stream" autoplay muted playsinline>
+       </video>
+      <video id="stream3" class="audience-stream" autoplay muted playsinline>
+       </video>
+    </div>
+
+    <div id="line2" class="video-line">
+      <video id="stream4" class="audience-stream" autoplay muted playsinline>
+       </video>
+      <video id="stream5" class="audience-stream" autoplay muted playsinline>
+       </video>
+      <video id="stream6" class="audience-stream" autoplay muted playsinline>
+       </video>
+    </div>
+    
+    <div id="line3" class="video-line">
+      <video id="stream7" class="audience-stream" autoplay muted playsinline>
+       </video>
+      <video id="stream8" class="audience-stream" autoplay muted playsinline>
+       </video>
+      <video id="stream9" class="audience-stream" autoplay muted playsinline>
+       </video>
+    </div>
+</div>
+<div class="outer-window">
+    <video id="vid" playsinline autoplay muted></video>
+</div>
+</body>
+
+<script src="script.js" async></script>
+
+</html>
