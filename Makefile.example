@@ -7,5 +7,5 @@ PAGES = projector preshowvideo stream_host jo-stream
 all: $(PAGES)
 
 $(PAGES):
-	$(CP) website/$@ $(PATH_TO_SITE)/$@
+	$(CP) website/$@ $(PATH_TO_SITE)/
 
