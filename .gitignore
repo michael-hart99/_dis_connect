@@ -3,6 +3,6 @@ package.json
 package-lock.json
 private_data.js
 .*.swp
-website/preshowvideo/*.mov
+website/*.mov
 Makefile
 
