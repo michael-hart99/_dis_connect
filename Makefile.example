@@ -1,0 +1,11 @@
+CP = cp -r
+
+PATH_TO_SITE = #/path/to/www/website.com/html
+
+PAGES = projector preshowvideo stream_host jo-stream
+
+all: $(PAGES)
+
+$(PAGES):
+	$(CP) website/$@ $(PATH_TO_SITE)/$@
+
