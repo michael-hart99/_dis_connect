@@ -1,5 +1,8 @@
 'use strict';
 
+/**
+ * TODO
+ */
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -8,16 +11,24 @@ function sleep(ms) {
 //  SIGNALLING SERVER  //
 /////////////////////////
 
+// TODO
 const HOST = "www.thejobdance.com";
+// TODO
 const PORT = 789;
 
+// TODO
 const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-stream-host');
 
+// TODO
 const my_id = "stream_host";
 
+// TODO
 CONN.onerror = 
   (err) => console.log('server\'s error: ' + err);
 
+/**
+ * TODO
+ */
 async function sendSignal(to, action, data) {
   let count = 0;
   while (CONN.readyState === 0 && count < 400) {
@@ -35,6 +46,9 @@ async function sendSignal(to, action, data) {
   }
 }
 
+/**
+ * TODO
+ */
 CONN.onmessage = function(e){
   var json = JSON.parse(e.data);
   
@@ -55,12 +69,21 @@ CONN.onmessage = function(e){
 //  WebRTC  //
 //////////////
 
+// TODO
 var pcs = new Map();
+// TODO
 var streams = new Map();
 
-var inUse = [0,0,0,0,0,0,0,0,0]
+// TODO
+var inUse = [-1, -1, -1,
+             -1, -1, -1,
+             -1, -1, -1];
+// TODO
 var flickering = false;
 
+/**
+ * TODO
+ */
 function openPeerConn(from) {
   let peerConnection = new RTCPeerConnection();
   pcs.set(from, peerConnection);
@@ -80,7 +103,6 @@ function openPeerConn(from) {
       video.srcObject = e.streams[0];
       streams.set(from, e.streams[0]);
       inUse[from % 9] = from;
-      console.log(inUse);
     }
   }
   
@@ -90,6 +112,9 @@ function openPeerConn(from) {
   }
 }
 
+/**
+ * TODO
+ */
 function processIce(from, iceCandidate){
   let peerConnection = pcs.get(from);
   try {
@@ -97,6 +122,9 @@ function processIce(from, iceCandidate){
   } catch (e) {}
 }
 
+/**
+ * TODO
+ */
 function processOffer(from, offer){
   openPeerConn(from);
 
@@ -120,24 +148,68 @@ function processOffer(from, offer){
 };
 
 ////////////////////////
+//  MANAGING STREAMS  //
+////////////////////////
 
+// The minimum delay between flickers (in seconds)
+const MIN_FLICKER_DELAY = 5;
+// The maximum delay between flickers (in seconds)
+const MAX_FLICKER_DELAY = 15;
+
+/**
+ * TODO
+ */
 async function flicker() {
-  let chosen_id = Math.floor(Math.random() * streams.size + 1);
-  let chosen_stream = Array.from(streams.keys())[chosen_id];
-  let chosen_view = Math.floor(Math.random()*9 + 1);
+  if (streams.size > 9) {
+    let stream_keys = Array.from(streams.keys());
 
-  let video = document.querySelector('#stream' + (chosen_view % 9 + 1));
-  video.srcObject = streams[chosen_stream];
+    let chosen_key = Math.floor(Math.random() * streams.size);
+    let chosen_stream = stream_keys[chosen_key];
+    let chosen_video = Math.floor(Math.random() * 9);
+
+    if (inUse.includes(chosen_stream)) {
+      console.log(chosen_stream);
+      let notInUse = stream_keys.filter(x => !inUse.includes(x));
+      console.log(notInUse);
+
+      let chosen_unused_key = Math.floor(Math.random() * notInUse.length);
+      let chosen_unused_stream = notInUse[chosen_unused_key];
+      console.log(chosen_unused_stream);
+
+      for (let i = 0; i < inUse.length; ++i) {
+        if (inUse[i] === chosen_stream) {
+          inUse[i] = chosen_unused_stream;
+          let video = document.querySelector('#stream' + (i + 1));
+          video.srcObject = streams.get(chosen_unused_stream);
+        }
+      }
+    }
+
+    inUse[chosen_video] = chosen_stream;
+    let video = document.querySelector('#stream' + (chosen_video + 1));
+    video.srcObject = streams.get(chosen_stream);
   
-  await sleep(Math.random() * 10000 + 5000);
+    console.log("flickered");
+  }
+  await sleep(Math.random() * ((MAX_FLICKER_DELAY - MIN_FLICKER_DELAY) * 1000)
+              + (MIN_FLICKER_DELAY * 1000));
   flicker();
-  console.log("flickered");
 }
 
+/**
+ * TODO
+ */
 function disconnectStream(from) {
   try {
     pcs.delete(from);
     streams.delete(from);
+    for (let i = 0; i < inUse.length; ++i) {
+      if (inUse[i] === from) {
+        inUse[i] = -1;
+        let video = document.querySelector('#stream' + (i + 1));
+        video.srcObject = undefined;
+      }
+    }
   } catch (e) {}
 }
 
