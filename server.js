@@ -5,12 +5,6 @@ const https = require('https');
 
 const WebSocketServer = require('ws').Server;
 
-var origin_time;
-var cur_state = 'idle';
-
-var stream_host, jo_stream, projector;
-const streamers = new Map();
-var cur_id = 0;
 
 const server = https.createServer({
   cert: fs.readFileSync(private_data.PATH_TO_SSL + 'fullchain.pem'),
@@ -18,12 +12,16 @@ const server = https.createServer({
 });
 
 wss = new WebSocketServer({ server });
-
 server.listen(private_data.PORT);
 
-function originIsAllowed(origin) {
-  return true;
-}
+
+var origin_time;
+var cur_state = 'idle';
+
+var stream_host, jo_stream, projector;
+const streamers = new Map();
+var cur_id = 0;
+
 
 function onOpen(server, request) {
   switch(request) {
@@ -75,28 +73,20 @@ function onClose(server) {
   } else if (server.id === 'jo_stream') {
     if (typeof projector !== 'undefined') {
       projector.send(JSON.stringify({
+        from: "jo_stream",
         to: "projector",
-        from: "jo_stream",
-        action: "disconnect"
-      }));
-    }
-    if (typeof stream_host !== 'undefined') {
-      stream_host.send(JSON.stringify({
-        to: "stream_host",
-        from: "jo_stream",
         action: "disconnect"
       }));
     }
     jo_stream = undefined;
-    // origin_time = undefined;
     server.id = undefined;
     console.log('jo_stream disconnected');
   } else {
     streamers.delete(server.id);
     if (typeof stream_host !== "undefined")
       stream_host.send(JSON.stringify({
-        to: "stream_host",
         from: server.id,
+        to: "stream_host",
         action: "disconnect"
       }));
     console.log(server.id + ' disconnected');
@@ -109,7 +99,7 @@ function onMessage(message) {
   try {
     json = JSON.parse(message);
   } catch (e) {
-    console.log('error processing the JSON');
+    console.log('error processing as JSON: %s', message);
   }
 
   console.log("%s sent '%s' to %s", json.from, json.action, json.to);
@@ -129,18 +119,22 @@ function onMessage(message) {
       break;
     case 'all':
       switch (json.action) {
-        case 'blackout':
-          handleBlackout();
-          break;
         case 'begin_video':
-          handleBeginVideo();
+          if (typeof origin_time === 'undefined') {
+            origin_time = Date.now();
+          }
+          json.data = origin_time;
+          message = JSON.stringify(json);
           break;
         case 'reset_video':
-          handleResetVideo();
+          origin_time = undefined;
+          json.action = 'blackout';
+          message = JSON.stringify(json);
           break;
-        case 'can_stream':
-          handleCanStream();
-          break;
+      }
+      cur_state = json.action;
+      for (const s of streamers.values()) {
+        s.send(message);
       }
       break;
     default:
@@ -151,42 +145,6 @@ function onMessage(message) {
         console.log("Unable to find addressee '%s'", json.to);
       }
   }
-}
-
-function handleDisconnect() {
-  if (typeof projector !== "undefined")
-      projector.send(JSON.stringify({action: "disconnect"}));
-}
-
-function handleBlackout() {
-  cur_state = "blackout";
-  for (const s of streamers.values()) {
-    s.send(JSON.stringify({action: 'blackout'}));
-  }
-}
-
-function handleBeginVideo() {
-  cur_state = "pre-show";
-  if (typeof origin_time === 'undefined') {
-    origin_time = Date.now();
-  }
-  for (const s of streamers.values()) {
-    s.send(JSON.stringify({
-        action: 'begin_video',
-        data: origin_time}));
-  }
-}
-
-function handleCanStream() {
-  cur_state = "can_stream";
-  for (const s of streamers.values()) {
-    s.send(JSON.stringify({action: 'can_stream'}));
-  }
-}
-
-function handleResetVideo() {
-  origin_time = undefined;
-  handleBlackout();
 }
 
 

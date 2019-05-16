@@ -47,7 +47,7 @@ CONN.onmessage = function(e){
     switch (json.data.state) {
       case "idle":
         break;
-      case "pre-show":
+      case "begin_video":
         processBeginVideo(json.data.origin_time);
         break;
       case "blackout":
