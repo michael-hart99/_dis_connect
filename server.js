@@ -18,7 +18,7 @@ server.listen(private_data.PORT);
 var origin_time;
 var cur_state = 'idle';
 
-var stream_host, jo_stream, projector;
+var stream_host, controller, projector;
 const streamers = new Map();
 var cur_id = 0;
 
@@ -51,10 +51,10 @@ function onOpen(server, request) {
       streamers.set(server.id, server);
       console.log(server.id + ' connected');
       break;
-    case 'request-jo-stream':
-      server.id = 'jo_stream';
-      jo_stream = server;
-      console.log('jo_stream connected');
+    case 'request-controller':
+      server.id = 'controller';
+      controller = server;
+      console.log('controller connected');
       break;
     default:
      console.log('unknown connection request: ' + request);
@@ -70,17 +70,17 @@ function onClose(server) {
     projector = undefined;
     server.id = undefined;
     console.log('projector disconnected');
-  } else if (server.id === 'jo_stream') {
+  } else if (server.id === 'controller') {
     if (typeof projector !== 'undefined') {
       projector.send(JSON.stringify({
-        from: "jo_stream",
+        from: "controller",
         to: "projector",
         action: "disconnect"
       }));
     }
-    jo_stream = undefined;
+    controller = undefined;
     server.id = undefined;
-    console.log('jo_stream disconnected');
+    console.log('controller disconnected');
   } else {
     streamers.delete(server.id);
     if (typeof stream_host !== "undefined")
@@ -109,9 +109,9 @@ function onMessage(message) {
       if (typeof projector !== "undefined")
         projector.send(message);
       break;
-    case 'jo_stream':
-      if (typeof jo_stream !== "undefined")
-        jo_stream.send(message);
+    case 'controller':
+      if (typeof controller !== "undefined")
+        controller.send(message);
       break;
     case 'stream_host':
       if (typeof stream_host !== "undefined")

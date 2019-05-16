@@ -11,7 +11,7 @@ function sleep(ms) {
 const HOST = "www.thejobdance.com";
 const PORT = 789;
 
-const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-jo-stream');
+const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-controller');
 
 CONN.onerror = 
   (err) => console.log('server\'s error: ' + err);
@@ -24,7 +24,7 @@ async function sendSignal(to, action, data) {
   }
   if (CONN.readyState === 1) {
     CONN.send(JSON.stringify({
-      from: 'jo_stream',
+      from: 'controller',
       to: to,
       action: action,
       data: data

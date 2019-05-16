@@ -61,7 +61,7 @@ function openPeerConn() {
     if (!peerConnection || !e || !e.candidate)
       return;
     var candidate = e.candidate;
-    sendSignal('jo_stream', "candidate", candidate);
+    sendSignal('controller', "candidate", candidate);
     console.log("ICE sent");
   };
 
@@ -92,7 +92,7 @@ function processOffer(stream_id, offer){
   };
   peerConnection.createAnswer(sdpConstraints).then(sdp => {
     peerConnection.setLocalDescription(sdp).then(() => {           
-      sendSignal('jo_stream', "answer", sdp);
+      sendSignal('controller', "answer", sdp);
       console.log("answer sent");
     })
   }, function(err) {
