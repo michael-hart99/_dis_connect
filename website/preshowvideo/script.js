@@ -140,9 +140,15 @@ function processAnswer(answer) {
 function processBlackout() {
   const preshow = document.querySelector('#preshow-vid');
   const button = document.querySelector('#stream-button');
-  button.hidden = true;
+  const stream = document.querySelector('#stream');
   preshow.hidden = true;
   preshow.pause();
+  button.hidden = true;
+  stream.hidden = true;
+  if (stream.srcObject !== null) {
+    stream.srcObject.getVideoTracks()[0].stop();
+  }
+  stream.srcObject = undefined;
 }
 
 function processBeginVideo(origin_time) {
