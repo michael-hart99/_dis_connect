@@ -1,4 +1,3 @@
-// PORT, PATH_TO_SSL
 const private_data = require('./private_data');
 
 const fs = require('fs');
@@ -114,75 +113,43 @@ function onMessage(message) {
   }
 
   console.log("%s sent '%s' to %s", json.from, json.action, json.to);
-
-  switch (json.action) {
-    case 'offer':
-      handleOffer(server, json);
+  
+  switch (json.to) {
+    case 'projector':
+      if (typeof projector !== "undefined")
+        projector.send(message);
       break;
-    case 'answer':
-      handleAnswer(server, json);
+    case 'jo_stream':
+      if (typeof jo_stream !== "undefined")
+        jo_stream.send(message);
       break;
-    case 'candidate':
-      handleCandidate(server, json);
+    case 'stream_host':
+      if (typeof stream_host !== "undefined")
+        stream_host.send(message);
       break;
-    case 'disconnect':
-      handleDisconnect();
-      break;
-    case 'blackout':
-      handleBlackout();
-      break;
-    case 'begin_video':
-      handleBeginVideo();
-      break;
-    case 'reset_video':
-      handleResetVideo();
-      break;
-    case 'can_stream':
-      handleCanStream();
+    case 'all':
+      switch (json.action) {
+        case 'blackout':
+          handleBlackout();
+          break;
+        case 'begin_video':
+          handleBeginVideo();
+          break;
+        case 'reset_video':
+          handleResetVideo();
+          break;
+        case 'can_stream':
+          handleCanStream();
+          break;
+      }
       break;
     default:
-      console.log('unexpected action-type: ' + json.action);
-  }
-}
-
-function handleOffer(server, json) {
-  let message = JSON.stringify(json);
-  if (json.to === 'projector') {
-    if (typeof projector !== "undefined")
-      projector.send(message);
-  } else if (json.to === 'stream_host') {
-    if (typeof stream_host !== "undefined")
-      stream_host.send(message);
-  } else {
-    console.log("%s, %s, %s", json.to, json.from, json.action);
-    console.log("can't process offer from " + server.id + "; no stream_host");
-  }
-}
-
-function handleAnswer(server, json) {
-  let message = JSON.stringify(json);
-  if (json.to === 'jo_stream') {
-    if (typeof jo_stream !== "undefined")
-      jo_stream.send(message);
-  } else {
-    streamers.get(json.to).send(message);
-  }
-}
-
-function handleCandidate(server, json) {
-  let message = JSON.stringify(json);
-  if (json.to === 'projector') {
-    if (typeof projector !== "undefined")
-      projector.send(message);
-  } else if (json.to === 'jo_stream') {
-    if (typeof jo_stream !== "undefined")
-      jo_stream.send(message);
-  } else if (json.to === 'stream_host') {
-    if (typeof stream_host !== "undefined")
-      stream_host.send(message);
-  } else {
-    console.log("%s %s",json.to, json.from);
-    streamers.get(json.to).send(message);
+      const streamer = streamers.get(json.to);
+      if (streamer !== undefined) {
+        streamer.send(message);
+      } else {
+        console.log("Unable to find addressee '%s'", json.to);
+      }
   }
 }
 
@@ -221,7 +188,6 @@ function handleResetVideo() {
   origin_time = undefined;
   handleBlackout();
 }
-
 
 
 wss.on('connection', (server, request) => {
