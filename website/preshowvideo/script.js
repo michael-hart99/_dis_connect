@@ -39,7 +39,7 @@ CONN.onmessage = function(e){
 	console.log(e.data);
   
   if (json.action === "candidate"){
-    processIce(json.data);
+    processCandidate(json.data);
   } else if(json.action === "answer"){
     processAnswer(json.data);
   } else if(json.action === "initialize"){
@@ -83,8 +83,6 @@ function createConn() {
   const video = document.querySelector('#stream');
   button.hidden = true;
 
-	console.log("adf");
-
   openPC();
 }
 
@@ -125,7 +123,7 @@ function sendOffer() {
   });
 }
 
-function processIce(iceCandidate) {
+function processCandidate(iceCandidate) {
   try {
     pc.addIceCandidate(new RTCIceCandidate(iceCandidate));
   } catch (e) {}

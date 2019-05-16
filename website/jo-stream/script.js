@@ -36,7 +36,7 @@ CONN.onmessage = function(e){
   var json = JSON.parse(e.data);
   
   if (json.action === "candidate"){
-    processIce(json.from, json.data);
+    processCandidate(json.from, json.data);
   } else if(json.action === "answer"){
     processAnswer(json.from, json.data);
   } else {
@@ -84,7 +84,7 @@ function sendOffers() {
   });
 }
 
-function processIce(from, iceCandidate) {
+function processCandidate(from, iceCandidate) {
   try {
     if (from === "projector") {
       pc.addIceCandidate(new RTCIceCandidate(iceCandidate));

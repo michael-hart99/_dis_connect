@@ -40,7 +40,7 @@ CONN.onmessage = function(e){
   var json = JSON.parse(e.data);
 
   if(json.action === "candidate"){
-    processIce(json.from, json.data);
+    processCandidate(json.from, json.data);
   } else if(json.action === "offer") {
     processOffer(json.from, json.data)
   } else if(json.action === "disconnect") {
@@ -75,7 +75,7 @@ function openPeerConn() {
   video.hidden = false;
 }
 
-function processIce(from, iceCandidate){
+function processCandidate(from, iceCandidate){
   try {
     peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
   } catch (e) {}

@@ -55,7 +55,7 @@ CONN.onmessage = function(e){
   console.log("received %s from %s", json.action, json.from);
 
   if (json.action === "candidate") {
-    processIce(json.from, json.data);
+    processCandidate(json.from, json.data);
   } else if (json.action === "offer") {
     processOffer(json.from, json.data)
   } else if (json.action === "disconnect") {
@@ -115,7 +115,7 @@ function openPeerConn(from) {
 /**
  * TODO
  */
-function processIce(from, iceCandidate){
+function processCandidate(from, iceCandidate){
   let peerConnection = pcs.get(from);
   try {
     peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
