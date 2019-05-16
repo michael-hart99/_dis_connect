@@ -2,7 +2,7 @@ CP = cp -r
 
 PATH_TO_SITE = #/path/to/www/website.com/html
 
-PAGES = projector preshowvideo stream_host jo-stream
+PAGES = projector preshowvideo stream_host controller
 
 all: $(PAGES)
 
