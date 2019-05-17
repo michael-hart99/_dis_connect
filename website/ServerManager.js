@@ -5,30 +5,30 @@ const PORT = 789;
 
 class ServerManager {
   // TODO
-  id;
+  _id;
 
   // TODO
   _handlers;
 
   // TODO
-  connection;
+  _connection;
 
   /**
    * TODO
    */
   constructor(protocolID) {
-    this.id = protocolID;
+    this._id = protocolID;
 
     this._handlers = new Map();
 
-    this.connection = new WebSocket("wss://" + HOST + ":" + PORT,
-                                    "request-" + protocolID);
+    this._connection = new WebSocket("wss://" + HOST + ":" + PORT,
+                                     "request-" + protocolID);
 
-    this.connection.onerror = (err) => 
+    this._connection.onerror = (err) => 
         console.log("Error connecting to server");
 
     let thisObj = this;
-    this.connection.onmessage = function(e){ 
+    this._connection.onmessage = function(e){ 
       let json = JSON.parse(e.data);
       console.log("received %s from %s", json.action, json.from);
       
@@ -52,7 +52,7 @@ class ServerManager {
    * TODO
    */
   setID(id) {
-    this.id = id;
+    this._id = id;
   }
 
   /**
@@ -67,18 +67,18 @@ class ServerManager {
    */
   async sendSignal(to, action, data) {
     let count = 0;
-    while (this.connection.readyState === 0 && count < 400) {
+    while (this._connection.readyState === 0 && count < 400) {
       await ServerManager.sleep(5);
       count++;
     }
-    if (this.connection.readyState === 1) {
+    if (this._connection.readyState === 1) {
       let json = {
-        from: this.id,
+        from: this._id,
         to: to,
         action: action,
         data: data
       };
-      this.connection.send(JSON.stringify(json));
+      this._connection.send(JSON.stringify(json));
     }
   }
 }
