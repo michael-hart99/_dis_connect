@@ -84,10 +84,14 @@ function processBlackout() {
   const preshow = document.querySelector('#preshow-vid');
   const button = document.querySelector('#stream-button');
   const stream = document.querySelector('#stream');
+  
   preshow.hidden = true;
   preshow.pause();
   button.hidden = true;
   stream.hidden = true;
+
+  SM.sendSignal("stream_host", "disconnect");
+  
   if (stream.srcObject !== null) {
     stream.srcObject.getVideoTracks()[0].stop();
   }
