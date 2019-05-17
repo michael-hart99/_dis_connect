@@ -9,7 +9,7 @@ import ServerManager from "../ServerManager.js";
 const SM = new ServerManager("controller");
 
 SM.addHandler("candidate", processCandidate);
-SM.addHandler("answer", processAnswer);
+SM.addHandler(   "answer", processAnswer);
 
 //////////////
 //  WebRTC  //
@@ -61,7 +61,7 @@ function processAnswer(json) {
 
 ///////////////////////////////
 
-function disconnectStream() {
+function processDisconnect() {
   const video = document.getElementById('vid');
   video.hidden = true;
   video.srcObject.getTracks()[0].stop();
@@ -86,7 +86,7 @@ function multiStream() {
 }
 
 document.querySelector('#run').addEventListener('click', createConn);
-document.querySelector('#disconnect').addEventListener('click', disconnectStream);
+document.querySelector('#disconnect').addEventListener('click', processDisconnect);
 document.querySelector('#begin_vid').addEventListener('click', beginVid);
 document.querySelector('#reset_vid').addEventListener('click', resetVid);
 document.querySelector('#blackout').addEventListener('click', blackout);
