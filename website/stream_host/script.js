@@ -18,61 +18,43 @@ SM.addHandler("disconnect", processDisconnect);
 //////////////
 
 // TODO
-var pcs = new Map();
-// TODO
-var streams = new Map();
+var conns = new Map();
 
 // TODO
 var inUse = [-1, -1, -1,
              -1, -1, -1,
              -1, -1, -1];
 
-function createPeerConn(SM, to) {
-  let peerConn = new RTCPeerConnection();
-
-  peerConn.onicecandidate = (e) => {
-    if (!peerConn || !e || !e.candidate)
-      return;
-    let candidate = e.candidate;
-    SM.sendSignal(to, "candidate", candidate);
-    console.log("ICE sent");
-  };
-
-  return peerConn;
-}
-
 /**
  * TODO
  */
-function openPeerConn(from) {
-  let peerConnection = createPeerConn(SM, from);
-  pcs.set(from, peerConnection);
+function initConn(from) {
+  let conn = {};
+  conn.peerConn = WebRTCTools.createPeerConn(SM, from);
+  conns.set(from, conn);
   
-  console.log(peerConnection);
   let video = document.querySelector('#stream' + (from % 9 + 1));
-  peerConnection.ontrack = (e) => {
+  conn.peerConn.ontrack = (e) => {
     console.log("stream received");
-    if (video.srcObject !== e.streams[0]) {
-      video.srcObject = e.streams[0];
-      streams.set(from, e.streams[0]);
-      inUse[from % 9] = from;
-    }
+    video.srcObject = e.streams[0];
+    conn.stream = e.streams[0];
+    inUse[from % 9] = from;
   }
 
-  return peerConnection;
+  return conn.peerConn;
 }
 
 function processCandidate(json) {
-  WebRTCTools.receiveCandidate(pcs.get(json.from), json);
+  WebRTCTools.receiveCandidate(conns.get(json.from).peerConn, json);
 }
 
 /**
  * TODO
  */
 function processOffer(json) {
-  let peerConnection = openPeerConn(json.from);
+  let peerConn = initConn(json.from);
 
-  WebRTCTools.receiveOffer(SM, peerConnection, json);
+  WebRTCTools.receiveOffer(SM, peerConn, json);
 }
 
 ////////////////////////
@@ -88,34 +70,31 @@ const MAX_FLICKER_DELAY = 15;
  * TODO
  */
 async function flicker() {
-  if (streams.size > 9) {
-    let stream_keys = Array.from(streams.keys());
+  if (conns.size > 9) {
+    let stream_keys = Array.from(conns.keys());
 
-    let chosen_key = Math.floor(Math.random() * streams.size);
+    let chosen_key = Math.floor(Math.random() * conns.size);
     let chosen_stream = stream_keys[chosen_key];
     let chosen_video = Math.floor(Math.random() * 9);
 
     if (inUse.includes(chosen_stream)) {
-      console.log(chosen_stream);
       let notInUse = stream_keys.filter(x => !inUse.includes(x));
-      console.log(notInUse);
 
       let chosen_unused_key = Math.floor(Math.random() * notInUse.length);
       let chosen_unused_stream = notInUse[chosen_unused_key];
-      console.log(chosen_unused_stream);
 
       for (let i = 0; i < inUse.length; ++i) {
         if (inUse[i] === chosen_stream) {
           inUse[i] = chosen_unused_stream;
           let video = document.querySelector('#stream' + (i + 1));
-          video.srcObject = streams.get(chosen_unused_stream);
+          video.srcObject = conns.get(chosen_unused_stream).stream;
         }
       }
     }
 
     inUse[chosen_video] = chosen_stream;
     let video = document.querySelector('#stream' + (chosen_video + 1));
-    video.srcObject = streams.get(chosen_stream);
+    video.srcObject = conns.get(chosen_stream).stream;
   
     console.log("flickered");
   }
@@ -129,8 +108,7 @@ async function flicker() {
  */
 function processDisconnect(json) {
   try {
-    pcs.delete(json.from);
-    streams.delete(json.from);
+    conns.delete(json.from);
     for (let i = 0; i < inUse.length; ++i) {
       if (inUse[i] === json.from) {
         inUse[i] = -1;

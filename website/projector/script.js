@@ -19,23 +19,8 @@ SM.addHandler("disconnect", processDisconnect);
 
 var pc;
 
-function createPeerConn(SM, to) {
-  let peerConn = new RTCPeerConnection();
-
-  peerConn.onicecandidate = (e) => {
-    if (!peerConn || !e || !e.candidate)
-      return;
-    var candidate = e.candidate;
-    SM.sendSignal(to, "candidate", candidate);
-    console.log("ICE sent");
-  };
-
-  return peerConn;
-}
-
-function openPeerConn() {
-  let peerConn = createPeerConn(SM, "controller");
-  console.log(peerConn);
+function initConn() {
+  let peerConn = WebRTCTools.createPeerConn(SM, "controller");
 
   const video = document.querySelector('#vid');
   peerConn.ontrack = (e) => {
@@ -47,8 +32,7 @@ function openPeerConn() {
 }
 
 function processOffer(json) {
-  pc = openPeerConn();
-  console.log(pc);
+  pc = initConn();
 
   WebRTCTools.receiveOffer(SM, pc, json)
 }

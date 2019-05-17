@@ -22,46 +22,14 @@ SM.addHandler( "can_stream", processCanStream);
 
 var pc;
 
-function createConn() {
+async function initConn() {
   const button = document.querySelector('#stream-button');
   const video = document.querySelector('#stream');
   button.hidden = true;
 
-  initConn();
-}
+  pc = WebRTCTools.createPeerConn(SM, "stream_host");
 
-function createPeerConn(SM, to) {
-  let peerConn = new RTCPeerConnection();
-  
-  peerConn.onicecandidate = (e) => {
-    if (!peerConn || !e || !e.candidate)
-      return;
-    let candidate = e.candidate;
-    SM.sendSignal(to, "candidate", candidate);
-    console.log("ICE sent");
-  };
-
-  return peerConn;
-}
-
-async function startStream(peerConn, streamID) {
-  const video = document.getElementById(streamID);
-  const stream = await navigator.mediaDevices.getUserMedia(
-                          {video: {
-			     facingMode: "environment",
-			     frameRate: {ideal: 20, max: 30}
-			   },
-		           audio: false});
-
-  video.srcObject = stream;
-  video.hidden = false;
-  peerConn.addTrack(stream.getVideoTracks()[0], stream);
-}
-
-async function initConn() {
-  pc = createPeerConn(SM, "stream_host");
-
-  await startStream(pc, "stream");
+  await WebRTCTools.startStream(pc, "stream");
 
   WebRTCTools.sendOffer(SM, pc, "stream_host");
 }
@@ -133,5 +101,5 @@ function processCanStream() {
   button.hidden = false;
 }
 
-document.querySelector('#stream-button').addEventListener('click', createConn);
+document.querySelector('#stream-button').addEventListener('click', initConn);
 
