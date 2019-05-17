@@ -17,7 +17,7 @@ const HOST = "www.thejobdance.com";
 const PORT = 789;
 
 // TODO
-const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-stream-host');
+const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-stream_host');
 
 // TODO
 const my_id = "stream_host";

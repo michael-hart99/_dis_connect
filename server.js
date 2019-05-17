@@ -25,7 +25,7 @@ var cur_id = 0;
 
 function onOpen(server, request) {
   switch(request) {
-    case 'request-stream-host':
+    case 'request-stream_host':
       server.id = 'stream_host';
       stream_host = server;
       console.log('stream_host connected');
