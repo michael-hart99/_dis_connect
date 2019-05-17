@@ -1,0 +1,30 @@
+{
+  "name": "(dis)connect",
+  "version": "1.0.0",
+  "description": "A WebRTC project bringing low-latency to a dance performance involving many simultaneous live-streams.",
+  "main": "server.js",
+  "dependencies": {
+    "@types/express": "^4.16.1",
+    "express": "^4.17.0",
+    "ts-node-dev": "^1.0.0-pre.39",
+    "typescript": "^3.4.5",
+    "ws": "^7.0.0"
+  },
+  "devDependencies": {
+    "eslint-config-google": "^0.13.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node-dev --respawn --transpileOnly ./server/server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michael-hart99/-dis-connect.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michael-hart99/-dis-connect/issues"
+  },
+  "homepage": "https://github.com/michael-hart99/-dis-connect#readme"
+}
