@@ -1,59 +1,24 @@
 'use strict';
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+import ServerManager from "../ServerManager.js";
 
 /////////////////////////
 //  SIGNALLING SERVER  //
 /////////////////////////
 
-const HOST = "www.thejobdance.com";
-const PORT = 789;
+const SM = new ServerManager("controller");
 
-const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-controller');
-
-CONN.onerror = 
-  (err) => console.log('server\'s error: ' + err);
-
-async function sendSignal(to, action, data) {
-  let count = 0;
-  while (CONN.readyState === 0 && count < 400) {
-    await sleep(5);
-    count++;
-  }
-  if (CONN.readyState === 1) {
-    CONN.send(JSON.stringify({
-      from: 'controller',
-      to: to,
-      action: action,
-      data: data
-    }));
-  }
-}
-
-CONN.onmessage = function(e){ 
-  var json = JSON.parse(e.data);
-  
-  if (json.action === "candidate"){
-    processCandidate(json.from, json.data);
-  } else if(json.action === "answer"){
-    processAnswer(json.from, json.data);
-  } else {
-    console.log("unexpected action: " + json.action);
-  }
-}
+SM.addHandler("candidate", processCandidate);
+SM.addHandler("answer", processAnswer);
 
 //////////////
 //  WebRTC  //
 //////////////
 
 var pc;
-var stream_pc;
 
 async function createConn() {
   pc = new RTCPeerConnection();
-  stream_pc = new RTCPeerConnection();
   const video = document.querySelector('#vid');
   const stream = await navigator.mediaDevices.getUserMedia(
                           {video: {facingMode: 'environment'}, audio: false});
@@ -61,13 +26,12 @@ async function createConn() {
   video.srcObject = stream;
   video.hidden = false;
   pc.addTrack(stream.getVideoTracks()[0], stream);
-  stream_pc.addTrack(stream.getVideoTracks()[0], stream);
 
   pc.onicecandidate = (e) => {
     if (!pc || !e || !e.candidate)
       return;
     var candidate = e.candidate;
-    sendSignal("projector", "candidate", candidate);
+    SM.sendSignal("projector", "candidate", candidate);
     console.log("ICE sent");
   };
 
@@ -79,29 +43,20 @@ function sendOffers() {
 	                 offerToReceiveVideo: true };
   pc.createOffer(sdpConstraints).then(sdp => {
     pc.setLocalDescription(sdp);
-    sendSignal("projector", "offer", sdp);
+    SM.sendSignal("projector", "offer", sdp);
     console.log("offer sent to projector");
   });
 }
 
-function processCandidate(from, iceCandidate) {
+function processCandidate(json) {
   try {
-    if (from === "projector") {
-      pc.addIceCandidate(new RTCIceCandidate(iceCandidate));
-    } else if (from === "stream_host") {
-      stream_pc.addIceCandidate(new RTCIceCandidate(iceCandidate));
-    }
+    pc.addIceCandidate(new RTCIceCandidate(json.data));
   } catch (e) {}
 }
 
-function processAnswer(from, answer) {
-  if (from === "projector") {
-    pc.setRemoteDescription(new RTCSessionDescription(answer));
-  } else if (from === "stream_host") {
-    stream_pc.setRemoteDescription(new RTCSessionDescription(answer));
-  }
+function processAnswer(json) {
+  pc.setRemoteDescription(new RTCSessionDescription(json.data));
   console.log("processed answer");
-  return true;
 };
 
 ///////////////////////////////
@@ -110,24 +65,24 @@ function disconnectStream() {
   const video = document.getElementById('vid');
   video.hidden = true;
   video.srcObject.getTracks()[0].stop();
-  sendSignal("projector", 'disconnect');
+  SM.sendSignal("projector", 'disconnect');
 }
 
 function beginVid() {
-  sendSignal("all", 'begin_video');
+  SM.sendSignal("all", 'begin_video');
 }
 
 function resetVid() {
-  sendSignal("all", 'reset_video');
+  SM.sendSignal("all", 'reset_video');
 }
 
 function blackout() {
-  sendSignal("all", 'blackout');
+  SM.sendSignal("all", 'blackout');
 }
 
 function multiStream() {
   console.log('button pushed');
-  sendSignal("all", "can_stream");
+  SM.sendSignal("all", "can_stream");
 }
 
 document.querySelector('#run').addEventListener('click', createConn);
