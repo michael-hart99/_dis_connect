@@ -1,6 +1,7 @@
 'use strict';
 
 import ServerManager from "../ServerManager.js";
+import WebRTCTools   from "../WebRTCTools.js";
 
 /////////////////////////
 //  SIGNALLING SERVER  //
@@ -18,16 +19,23 @@ SM.addHandler("disconnect", processDisconnect);
 
 var pc;
 
-function openPeerConn() {
+function createPeerConn(SM, to) {
   let peerConn = new RTCPeerConnection();
 
   peerConn.onicecandidate = (e) => {
     if (!peerConn || !e || !e.candidate)
       return;
     var candidate = e.candidate;
-    SM.sendSignal('controller', "candidate", candidate);
+    SM.sendSignal(to, "candidate", candidate);
     console.log("ICE sent");
   };
+
+  return peerConn;
+}
+
+function openPeerConn() {
+  let peerConn = createPeerConn(SM, "controller");
+  console.log(peerConn);
 
   const video = document.querySelector('#vid');
   peerConn.ontrack = (e) => {
@@ -38,31 +46,18 @@ function openPeerConn() {
   return peerConn;
 }
 
-function processCandidate(json){
-  try {
-    pc.addIceCandidate(new RTCIceCandidate(json.data));
-  } catch (e) {}
+function processOffer(json) {
+  pc = openPeerConn();
+  console.log(pc);
+
+  WebRTCTools.receiveOffer(SM, pc, json)
 }
 
-function processOffer(json){
-  pc = openPeerConn();
+function processCandidate(json) {
+  WebRTCTools.receiveCandidate(pc, json);
+}
 
-  pc.setRemoteDescription(new RTCSessionDescription(json.data));
-  var sdpConstraints = {
-    'mandatory': {
-      'OfferToReceiveAudio': false,
-      'OfferToReceiveVideo': true
-    }
-  };
-  pc.createAnswer(sdpConstraints).then(sdp => {
-    pc.setLocalDescription(sdp).then(() => {           
-      SM.sendSignal('controller', "answer", sdp);
-      console.log("answer sent");
-    })
-  }, function(err) {
-    console.log('error processing offer: ' + err)
-  });
-};
+////////////////////////
 
 function processDisconnect() {
   const video = document.querySelector('#vid');
