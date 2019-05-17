@@ -1,6 +1,7 @@
 'use strict';
 
 import ServerManager from "../ServerManager.js";
+import WebRTCTools   from "../WebRTCTools.js";
 
 /////////////////////////
 //  SIGNALLING SERVER  //
@@ -25,24 +26,29 @@ var streams = new Map();
 var inUse = [-1, -1, -1,
              -1, -1, -1,
              -1, -1, -1];
-// TODO
-var flickering = false;
+
+function createPeerConn(SM, to) {
+  let peerConn = new RTCPeerConnection();
+
+  peerConn.onicecandidate = (e) => {
+    if (!peerConn || !e || !e.candidate)
+      return;
+    let candidate = e.candidate;
+    SM.sendSignal(to, "candidate", candidate);
+    console.log("ICE sent");
+  };
+
+  return peerConn;
+}
 
 /**
  * TODO
  */
 function openPeerConn(from) {
-  let peerConnection = new RTCPeerConnection();
+  let peerConnection = createPeerConn(SM, from);
   pcs.set(from, peerConnection);
   
-  peerConnection.onicecandidate = (e) => {
-    if (!peerConnection || !e || !e.candidate)
-      return;
-    let candidate = e.candidate;
-    SM.sendSignal(from, "candidate", candidate);
-    console.log("ICE sent");
-  };
-  
+  console.log(peerConnection);
   let video = document.querySelector('#stream' + (from % 9 + 1));
   peerConnection.ontrack = (e) => {
     console.log("stream received");
@@ -52,42 +58,22 @@ function openPeerConn(from) {
       inUse[from % 9] = from;
     }
   }
+
+  return peerConnection;
 }
 
-/**
- * TODO
- */
 function processCandidate(json) {
-  let peerConnection = pcs.get(json.from);
-  try {
-    peerConnection.addIceCandidate(new RTCIceCandidate(json.data));
-  } catch (e) {}
+  WebRTCTools.receiveCandidate(pcs.get(json.from), json);
 }
 
 /**
  * TODO
  */
 function processOffer(json) {
-  openPeerConn(json.from);
+  let peerConnection = openPeerConn(json.from);
 
-  let peerConnection = pcs.get(json.from);
-
-  peerConnection.setRemoteDescription(new RTCSessionDescription(json.data));
-  var sdpConstraints = {
-    'mandatory': {
-      'OfferToReceiveAudio': false,
-      'OfferToReceiveVideo': true
-    }
-  };
-  peerConnection.createAnswer(sdpConstraints).then(sdp => {
-    peerConnection.setLocalDescription(sdp).then(() => {           
-      SM.sendSignal(json.from, "answer", sdp);
-      console.log("answer sent");
-    })
-  }, function(err) {
-    console.log('error processing offer: ' + err)
-  });
-};
+  WebRTCTools.receiveOffer(SM, peerConnection, json);
+}
 
 ////////////////////////
 //  MANAGING STREAMS  //
