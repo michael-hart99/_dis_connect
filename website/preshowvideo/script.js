@@ -1,6 +1,7 @@
 'use strict';
 
 import ServerManager from "../ServerManager.js";
+import WebRTCTools   from "../WebRTCTools.js"
 
 /////////////////////////
 //  SIGNALLING SERVER  //
@@ -26,12 +27,25 @@ function createConn() {
   const video = document.querySelector('#stream');
   button.hidden = true;
 
-  openPC();
+  initConn();
 }
 
-async function openPC() {
-  pc = new RTCPeerConnection();
-  const video = document.querySelector('#stream');
+function createPeerConn(SM, to) {
+  let peerConn = new RTCPeerConnection();
+  
+  peerConn.onicecandidate = (e) => {
+    if (!peerConn || !e || !e.candidate)
+      return;
+    let candidate = e.candidate;
+    SM.sendSignal(to, "candidate", candidate);
+    console.log("ICE sent");
+  };
+
+  return peerConn;
+}
+
+async function startStream(peerConn, streamID) {
+  const video = document.getElementById(streamID);
   const stream = await navigator.mediaDevices.getUserMedia(
                           {video: {
 			     facingMode: "environment",
@@ -40,43 +54,25 @@ async function openPC() {
 		           audio: false});
 
   video.srcObject = stream;
-  pc.addTrack(stream.getVideoTracks()[0], stream);
   video.hidden = false;
-
-  pc.onicecandidate = (e) => {
-    if (!pc || !e || !e.candidate)
-      return;
-    let candidate = e.candidate;
-    SM.sendSignal("stream_host", "candidate", candidate);
-    console.log("ICE sent");
-  };
-
-  video.hidden = false;
-
-  sendOffer();
+  peerConn.addTrack(stream.getVideoTracks()[0], stream);
 }
 
-function sendOffer() {
-  const sdpConstraints = { offerToReceiveAudio: false,  
-	                 offerToReceiveVideo: true };
-  pc.createOffer(sdpConstraints).then(sdp => {
-    pc.setLocalDescription(sdp);
-    SM.sendSignal("stream_host", "offer", sdp);
-    console.log("offer sent");
-  });
+async function initConn() {
+  pc = createPeerConn(SM, "stream_host");
+
+  await startStream(pc, "stream");
+
+  WebRTCTools.sendOffer(SM, pc, "stream_host");
 }
 
 function processCandidate(json) {
-  try {
-    pc.addIceCandidate(new RTCIceCandidate(json.data));
-  } catch (e) {}
+  WebRTCTools.receiveCandidate(pc, json);
 }
 
 function processAnswer(json) {
-  pc.setRemoteDescription(new RTCSessionDescription(json.data));
-  console.log("processed answer");
-  return true;
-};
+  WebRTCTools.receiveAnswer(pc, json);
+}
 
 ///////////////////////////////
 
