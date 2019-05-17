@@ -1,69 +1,16 @@
 'use strict';
 
-/**
- * TODO
- */
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+import ServerManager from "../ServerManager.js";
 
 /////////////////////////
 //  SIGNALLING SERVER  //
 /////////////////////////
 
-// TODO
-const HOST = "www.thejobdance.com";
-// TODO
-const PORT = 789;
+const SM = new ServerManager("stream_host");
 
-// TODO
-const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-stream_host');
-
-// TODO
-const my_id = "stream_host";
-
-// TODO
-CONN.onerror = 
-  (err) => console.log('server\'s error: ' + err);
-
-/**
- * TODO
- */
-async function sendSignal(to, action, data) {
-  let count = 0;
-  while (CONN.readyState === 0 && count < 400) {
-    await sleep(5);
-    count++;
-  }
-  if (CONN.readyState === 1) {
-    let json = {
-      from: my_id,
-      to: to,
-      action: action,
-      data: data
-    };
-    CONN.send(JSON.stringify(json));
-  }
-}
-
-/**
- * TODO
- */
-CONN.onmessage = function(e){
-  var json = JSON.parse(e.data);
-  
-  console.log("received %s from %s", json.action, json.from);
-
-  if (json.action === "candidate") {
-    processCandidate(json.from, json.data);
-  } else if (json.action === "offer") {
-    processOffer(json.from, json.data)
-  } else if (json.action === "disconnect") {
-    disconnectStream(json.from);
-  } else {
-    console.log("unexpected action: " + json.action);
-  }
-}
+SM.addHandler( "candidate", processCandidate);
+SM.addHandler(     "offer", processOffer);
+SM.addHandler("disconnect", processDisconnect);
 
 //////////////
 //  WebRTC  //
@@ -92,7 +39,7 @@ function openPeerConn(from) {
     if (!peerConnection || !e || !e.candidate)
       return;
     let candidate = e.candidate;
-    sendSignal(from, "candidate", candidate);
+    SM.sendSignal(from, "candidate", candidate);
     console.log("ICE sent");
   };
   
@@ -105,32 +52,27 @@ function openPeerConn(from) {
       inUse[from % 9] = from;
     }
   }
-  
-  if (!flickering) {
-    flickering = true;
-    flicker();
-  }
 }
 
 /**
  * TODO
  */
-function processCandidate(from, iceCandidate){
-  let peerConnection = pcs.get(from);
+function processCandidate(json) {
+  let peerConnection = pcs.get(json.from);
   try {
-    peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
+    peerConnection.addIceCandidate(new RTCIceCandidate(json.data));
   } catch (e) {}
 }
 
 /**
  * TODO
  */
-function processOffer(from, offer){
-  openPeerConn(from);
+function processOffer(json) {
+  openPeerConn(json.from);
 
-  let peerConnection = pcs.get(from);
+  let peerConnection = pcs.get(json.from);
 
-  peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+  peerConnection.setRemoteDescription(new RTCSessionDescription(json.data));
   var sdpConstraints = {
     'mandatory': {
       'OfferToReceiveAudio': false,
@@ -139,7 +81,7 @@ function processOffer(from, offer){
   };
   peerConnection.createAnswer(sdpConstraints).then(sdp => {
     peerConnection.setLocalDescription(sdp).then(() => {           
-      sendSignal(from, "answer", sdp);
+      SM.sendSignal(json.from, "answer", sdp);
       console.log("answer sent");
     })
   }, function(err) {
@@ -191,7 +133,7 @@ async function flicker() {
   
     console.log("flickered");
   }
-  await sleep(Math.random() * ((MAX_FLICKER_DELAY - MIN_FLICKER_DELAY) * 1000)
+  await ServerManager.sleep(Math.random() * ((MAX_FLICKER_DELAY - MIN_FLICKER_DELAY) * 1000)
               + (MIN_FLICKER_DELAY * 1000));
   flicker();
 }
@@ -199,12 +141,12 @@ async function flicker() {
 /**
  * TODO
  */
-function disconnectStream(from) {
+function processDisconnect(json) {
   try {
-    pcs.delete(from);
-    streams.delete(from);
+    pcs.delete(json.from);
+    streams.delete(json.from);
     for (let i = 0; i < inUse.length; ++i) {
-      if (inUse[i] === from) {
+      if (inUse[i] === json.from) {
         inUse[i] = -1;
         let video = document.querySelector('#stream' + (i + 1));
         video.srcObject = undefined;
@@ -212,4 +154,6 @@ function disconnectStream(from) {
     }
   } catch (e) {}
 }
+
+flicker();
 
