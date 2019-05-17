@@ -1,76 +1,19 @@
 'use strict';
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+import ServerManager from "../ServerManager.js";
 
 /////////////////////////
 //  SIGNALLING SERVER  //
 /////////////////////////
 
-const HOST = "www.thejobdance.com";
-const PORT = 789;
+const SM = new ServerManager("preshow");
 
-const CONN = new WebSocket("wss://" + HOST + ":" + PORT, 'request-preshow');
-
-var my_id;
-
-CONN.onerror = 
-  (err) => console.log('server\'s error: ' + err);
-
-async function sendSignal(to, action, data) {
-  let count = 0;
-  while (CONN.readyState === 0 && count < 400) {
-    await sleep(5);
-    count++;
-  }
-  if (CONN.readyState === 1) {
-    CONN.send(JSON.stringify({
-      from: my_id,
-      to: to,
-      action: action,
-      data: data
-    }));
-  }
-}
-
-CONN.onmessage = function(e){ 
-  var json = JSON.parse(e.data);
-	console.log(e.data);
-  
-  if (json.action === "candidate"){
-    processCandidate(json.data);
-  } else if(json.action === "answer"){
-    processAnswer(json.data);
-  } else if(json.action === "initialize"){
-    my_id = json.data.id;
-    switch (json.data.state) {
-      case "idle":
-        break;
-      case "begin_video":
-        processBeginVideo(json.data.origin_time);
-        break;
-      case "blackout":
-        processBlackout();
-        break;
-      case "can_stream":
-        processBlackout();
-        processCanStream();
-        break;
-      default:
-        console.log("Unexpected state: %s", json.data.state);
-    }
-  } else if(json.action === "blackout"){
-    processBlackout();
-  } else if(json.action === "begin_video"){
-    processBeginVideo(json.data);
-  } else if (json.action === "can_stream") {
-    processBlackout();
-    processCanStream();
-  } else {
-    console.log("unexpected action: " + json.action);
-  }
-}
+SM.addHandler(  "candidate", processCandidate);
+SM.addHandler(     "answer", processAnswer);
+SM.addHandler( "initialize", processInitialize);
+SM.addHandler(   "blackout", processBlackout);
+SM.addHandler("begin_video", processBeginVideo);
+SM.addHandler( "can_stream", processCanStream);
 
 //////////////
 //  WebRTC  //
@@ -103,8 +46,8 @@ async function openPC() {
   pc.onicecandidate = (e) => {
     if (!pc || !e || !e.candidate)
       return;
-    var candidate = e.candidate;
-    sendSignal("stream_host", "candidate", candidate);
+    let candidate = e.candidate;
+    SM.sendSignal("stream_host", "candidate", candidate);
     console.log("ICE sent");
   };
 
@@ -114,23 +57,23 @@ async function openPC() {
 }
 
 function sendOffer() {
-  var sdpConstraints = { offerToReceiveAudio: false,  
+  const sdpConstraints = { offerToReceiveAudio: false,  
 	                 offerToReceiveVideo: true };
   pc.createOffer(sdpConstraints).then(sdp => {
     pc.setLocalDescription(sdp);
-    sendSignal("stream_host", "offer", sdp);
+    SM.sendSignal("stream_host", "offer", sdp);
     console.log("offer sent");
   });
 }
 
-function processCandidate(iceCandidate) {
+function processCandidate(json) {
   try {
-    pc.addIceCandidate(new RTCIceCandidate(iceCandidate));
+    pc.addIceCandidate(new RTCIceCandidate(json.data));
   } catch (e) {}
 }
 
-function processAnswer(answer) {
-  pc.setRemoteDescription(new RTCSessionDescription(answer));
+function processAnswer(json) {
+  pc.setRemoteDescription(new RTCSessionDescription(json.data));
   console.log("processed answer");
   return true;
 };
@@ -151,20 +94,42 @@ function processBlackout() {
   stream.srcObject = undefined;
 }
 
-function processBeginVideo(origin_time) {
+function processBeginVideo(json) {
   const preshow = document.querySelector('#preshow-vid');
   preshow.oncanplay = () => {
     preshow.oncanplay = undefined;
     preshow.play();
-    preshow.currentTime = (Date.now() - origin_time) / 1000.0;
+    preshow.currentTime = (Date.now() - json.data) / 1000.0;
     preshow.hidden = false;
   }
   preshow.load();
 }
 
-function processCanStream() {
-  const button = document.querySelector('#stream-button');
+function processInitialize(json) {
+  SM.setID(json.data.id);
 
+  switch (json.data.state) {
+    case "idle":
+      break;
+    case "begin_video":
+      json.data = json.data.origin_time;
+      processBeginVideo(json);
+      break;
+    case "blackout":
+      processBlackout();
+      break;
+    case "can_stream":
+      processCanStream();
+      break;
+    default:
+      console.log("Unexpected initialize state: %s", json.data.state);
+  }
+}
+
+function processCanStream() {
+  processBlackout();
+
+  const button = document.querySelector('#stream-button');
   button.hidden = false;
 }
 
