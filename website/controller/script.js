@@ -1,6 +1,7 @@
 'use strict';
 
 import ServerManager from "../ServerManager.js";
+import WebRTCTools   from "../WebRTCTools.js";
 
 /////////////////////////
 //  SIGNALLING SERVER  //
@@ -17,47 +18,49 @@ SM.addHandler(   "answer", processAnswer);
 
 var pc;
 
-async function createConn() {
-  pc = new RTCPeerConnection();
-  const video = document.querySelector('#vid');
-  const stream = await navigator.mediaDevices.getUserMedia(
-                          {video: {facingMode: 'environment'}, audio: false});
+function createPeerConn(SM, to) {
+  let peerConn = new RTCPeerConnection();
 
-  video.srcObject = stream;
-  video.hidden = false;
-  pc.addTrack(stream.getVideoTracks()[0], stream);
-
-  pc.onicecandidate = (e) => {
-    if (!pc || !e || !e.candidate)
+  peerConn.onicecandidate = (e) => {
+    if (!peerConn || !e || !e.candidate)
       return;
     var candidate = e.candidate;
-    SM.sendSignal("projector", "candidate", candidate);
+    SM.sendSignal(to, "candidate", candidate);
     console.log("ICE sent");
   };
 
-  sendOffers();
+  return peerConn;
 }
 
-function sendOffers() {
-  var sdpConstraints = { offerToReceiveAudio: false,  
-	                 offerToReceiveVideo: true };
-  pc.createOffer(sdpConstraints).then(sdp => {
-    pc.setLocalDescription(sdp);
-    SM.sendSignal("projector", "offer", sdp);
-    console.log("offer sent to projector");
-  });
+async function startStream(peerConn, streamID) {
+  const video = document.getElementById(streamID);
+  const stream = await navigator.mediaDevices.getUserMedia(
+                          {video: {
+                             facingMode: 'environment',
+                             frameRate: {ideal: 20, max: 30}
+                           }, 
+                           audio: false});
+
+  video.srcObject = stream;
+  video.hidden = false;
+  peerConn.addTrack(stream.getVideoTracks()[0], stream);
+}
+
+async function initConn() {
+  pc = createPeerConn(SM, "projector");
+
+  await startStream(pc, "vid");
+
+  WebRTCTools.sendOffer(SM, pc, "projector");
 }
 
 function processCandidate(json) {
-  try {
-    pc.addIceCandidate(new RTCIceCandidate(json.data));
-  } catch (e) {}
+  WebRTCTools.receiveCandidate(pc, json);
 }
 
 function processAnswer(json) {
-  pc.setRemoteDescription(new RTCSessionDescription(json.data));
-  console.log("processed answer");
-};
+  WebRTCTools.receiveAnswer(pc, json);
+}
 
 ///////////////////////////////
 
@@ -81,11 +84,10 @@ function blackout() {
 }
 
 function multiStream() {
-  console.log('button pushed');
   SM.sendSignal("all", "can_stream");
 }
 
-document.querySelector('#run').addEventListener('click', createConn);
+document.querySelector('#run').addEventListener('click', initConn);
 document.querySelector('#disconnect').addEventListener('click', processDisconnect);
 document.querySelector('#begin_vid').addEventListener('click', beginVid);
 document.querySelector('#reset_vid').addEventListener('click', resetVid);
