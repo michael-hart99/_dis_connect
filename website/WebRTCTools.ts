@@ -1,10 +1,13 @@
-import ServerManager from "./ServerManager";
+import ServerManager from './ServerManager';
 
-type ServerMessage = {
-  to: string | number,
-  from: string | number,
-  action: string,
-  data: any
+/**
+ * TODO
+ */
+interface ServerMessage {
+  to: string;
+  from: string;
+  action: string;
+  data: any;
 }
 
 class WebRTCTools {
@@ -12,7 +15,7 @@ class WebRTCTools {
    * Creates and returns a new peer connection. Uses the given
    *     server connection to send candidate information to the
    *     specified recipient.
-   * 
+   *
    * @param {ServerManager} The server that should be used to send info
    *     about new ICE candidates.
    * @param {String}        The ID of the peer that this connection is
@@ -20,15 +23,18 @@ class WebRTCTools {
    *
    * @return {RTCPeerConnection} The newly prepared peer connection.
    */
-  static createPeerConn(SM : ServerManager, to : string | number) {
+  public static createPeerConn(
+    SM: ServerManager,
+    to: string
+  ): RTCPeerConnection {
     let peerConn = new RTCPeerConnection();
 
-    peerConn.onicecandidate = (e) => {
-      if (!peerConn || !e || !e.candidate)
-        return;
-      var candidate = e.candidate;
-      SM.sendSignal(to, "candidate", candidate);
-      console.log("ICE sent");
+    peerConn.onicecandidate = (e: RTCPeerConnectionIceEvent): void => {
+      if (peerConn && e && e.candidate) {
+        var candidate = e.candidate;
+        SM.sendSignal(to, 'candidate', candidate);
+        console.log('ICE sent');
+      }
     };
 
     return peerConn;
@@ -36,7 +42,7 @@ class WebRTCTools {
 
   /**
    * Attempts to get video from the user's camera and adds it to the
-   *     given peer connection. Additionally places the video in the 
+   *     given peer connection. Additionally places the video in the
    *     local webpage using the specified element's ID.
    *
    * @param {RTCPeerConnection} peerConn The connection that this
@@ -44,19 +50,23 @@ class WebRTCTools {
    * @param {String}            videoID  The ID of the element that this
    *     camera's video will stream to.
    */
-  static async startStream(peerConn : RTCPeerConnection, videoID : string) {
-    const video = <HTMLVideoElement> document.getElementById(videoID);
-    const stream = await navigator.mediaDevices.getUserMedia(
-                            {video: {
-                               facingMode: 'environment',
-                             }, 
-                             audio: false});
-    
+  public static async startStream(
+    peerConn: RTCPeerConnection,
+    videoID: string
+  ): Promise<void> {
+    const video = document.getElementById(videoID) as HTMLVideoElement;
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment',
+      },
+      audio: false,
+    });
+
     if (video !== null) {
       video.srcObject = stream;
       video.hidden = false;
     } else {
-      console.log("Could not access element with id %s", videoID);
+      console.log('Could not access element with id %s', videoID);
     }
     peerConn.addTrack(stream.getVideoTracks()[0], stream);
   }
@@ -69,7 +79,10 @@ class WebRTCTools {
    * @param {Object}            json     Information about the received
    *     signal including candidate information.
    */
-  static receiveCandidate(peerConn : RTCPeerConnection, json : ServerMessage) {
+  public static receiveCandidate(
+    peerConn: RTCPeerConnection,
+    json: ServerMessage
+  ): void {
     try {
       peerConn.addIceCandidate(new RTCIceCandidate(json.data));
     } catch (e) {}
@@ -77,21 +90,29 @@ class WebRTCTools {
 
   /**
    * Creates an offer and sends it to the specified peer.
-   * 
+   *
    * @param {ServerManager}     SM       The server to be used to send
    *     connection info through.
    * @param {RTCPeerConnection} peerConn The peer the offer will be sent to.
    * @param {String}            to       The ID of the other peer in the
    *     connection.
    */
-  static sendOffer(SM : ServerManager, peerConn : RTCPeerConnection, to : string) {
-    const sdpConstraints = { offerToReceiveAudio: false,  
-                             offerToReceiveVideo: true };
-    peerConn.createOffer(sdpConstraints).then(sdp => {
-      peerConn.setLocalDescription(sdp);
-      SM.sendSignal(to, "offer", sdp);
-      console.log("offer sent");
-    });
+  public static sendOffer(
+    SM: ServerManager,
+    peerConn: RTCPeerConnection,
+    to: string
+  ): void {
+    const sdpConstraints = {
+      offerToReceiveAudio: false,
+      offerToReceiveVideo: true,
+    };
+    peerConn.createOffer(sdpConstraints).then(
+      (sdp: RTCSessionDescriptionInit): void => {
+        peerConn.setLocalDescription(sdp);
+        SM.sendSignal(to, 'offer', sdp);
+        console.log('offer sent');
+      }
+    );
   }
 
   /**
@@ -103,33 +124,43 @@ class WebRTCTools {
    * @param {Object}            json     Information about the received
    *     signal, including offer information.
    */
-  static receiveOffer(SM : ServerManager, peerConn : RTCPeerConnection, json : ServerMessage) {
+  public static receiveOffer(
+    SM: ServerManager,
+    peerConn: RTCPeerConnection,
+    json: ServerMessage
+  ): void {
     peerConn.setRemoteDescription(new RTCSessionDescription(json.data));
-    const sdpConstraints = { offerToReceiveAudio: false,  
-                             offerToReceiveVideo: true };
-    peerConn.createAnswer(sdpConstraints).then(sdp => {
-      peerConn.setLocalDescription(sdp).then(() => {           
-        SM.sendSignal(json.from, "answer", sdp);
-        console.log("answer sent");
-      })
-    }, function(err) {
-      console.log('error processing offer: ' + err)
-    });
+    const sdpConstraints = {
+      offerToReceiveAudio: false,
+      offerToReceiveVideo: true,
+    };
+    peerConn.createAnswer(sdpConstraints).then(
+      (sdp: RTCSessionDescriptionInit): void => {
+        peerConn.setLocalDescription(sdp).then(
+          (): void => {
+            SM.sendSignal(json.from, 'answer', sdp);
+            console.log('answer sent');
+          }
+        );
+      }
+    );
   }
 
   /**
    * Takes an answer and completes the RTC connection.
    *
-   * @param {RTCPeerConnection} peerConn The peer that is receiving the 
+   * @param {RTCPeerConnection} peerConn The peer that is receiving the
    *     answer.
    * @param {Object}            json     Information about the received
    *     signal, including answer information.
    */
-  static receiveAnswer(peerConn : RTCPeerConnection, json : ServerMessage) {
+  public static receiveAnswer(
+    peerConn: RTCPeerConnection,
+    json: ServerMessage
+  ): void {
     peerConn.setRemoteDescription(new RTCSessionDescription(json.data));
-    console.log("processed answer");
+    console.log('processed answer');
   }
 }
 
 export default WebRTCTools;
-
