@@ -1,50 +1,47 @@
-import { IncomingMessage } from "http";
+import { IncomingMessage } from 'http';
+import fs from 'fs';
+import https from 'https';
 
-const private_data = require('./private_data');
-
-const fs = require('fs');
-const https = require('https');
+import privateData from './private_data';
 
 const WebSocketServer = require('ws').Server;
 
-
-type SmartWebSocket = {
-  id: string | number,
-  send: (message : string) => void,
-  on: Function
+interface SmartWebSocket {
+  id: string | number;
+  send: (message: string) => void;
+  on: Function;
 }
-type ServerMessage = {
-  from: string | number,
-  to: string | number,
-  action: string,
-  data: any
+interface ServerMessage {
+  from: string;
+  to: string;
+  action: string;
+  data: string;
 }
-
 
 const server = https.createServer({
-  cert: fs.readFileSync(private_data.PATH_TO_SSL + 'fullchain.pem'),
-  key: fs.readFileSync(private_data.PATH_TO_SSL + 'privkey.pem')
+  cert: fs.readFileSync(privateData.PATH_TO_SSL + 'fullchain.pem'),
+  key: fs.readFileSync(privateData.PATH_TO_SSL + 'privkey.pem'),
 });
 
 const wss = new WebSocketServer({ server });
-server.listen(private_data.PORT);
+server.listen(privateData.PORT);
 
+let originTime: number;
+let curState = 'idle';
 
-let origin_time : number;
-let cur_state = 'idle';
-
-let stream_host : SmartWebSocket | undefined,
-    controller : SmartWebSocket | undefined,
-    projector : SmartWebSocket | undefined;
+let streamHost: SmartWebSocket | undefined,
+    controller: SmartWebSocket | undefined,
+    projector: SmartWebSocket | undefined;
 const streamers = new Map<number, SmartWebSocket>();
-var cur_id = 0;
+let curID = 0;
 
-function onOpen(server : SmartWebSocket, request : string | string[] | undefined) {
-  switch(request) {
-    case 'request-stream_host':
-      server.id = 'stream_host';
-      stream_host = server;
-      console.log('stream_host connected');
+function onOpen(server: SmartWebSocket,
+                request: string | string[] | undefined) {
+  switch (request) {
+    case 'request-streamHost':
+      server.id = 'streamHost';
+      streamHost = server;
+      console.log('streamHost connected');
       break;
     case 'request-projector':
       server.id = 'projector';
@@ -52,17 +49,17 @@ function onOpen(server : SmartWebSocket, request : string | string[] | undefined
       console.log('projector connected');
       break;
     case 'request-preshow':
-      server.id = cur_id;
-      ++cur_id;
-      
-      server.send(JSON.stringify({
-        from: "SERVER",
-	      to: server.id,
-	      action: "initialize",
-	      data: {id: server.id,
-               state: cur_state,
-               origin_time: origin_time}
-      }));
+      server.id = curID;
+      ++curID;
+
+      server.send(
+        JSON.stringify({
+          from: 'SERVER',
+          to: String(server.id),
+          action: 'initialize',
+          data: String(server.id) + '|' + curState + '|' + String(originTime),
+        })
+      );
 
       streamers.set(server.id, server);
       console.log(server.id + ' connected');
@@ -73,15 +70,15 @@ function onOpen(server : SmartWebSocket, request : string | string[] | undefined
       console.log('controller connected');
       break;
     default:
-     console.log('unknown connection request: ' + request);
+      console.log('unknown connection request: ' + request);
   }
 }
 
-function onClose(server : SmartWebSocket) {
+function onClose(server: SmartWebSocket) {
   switch (server.id) {
-    case 'stream_host':
-      stream_host = undefined;
-      console.log('stream_host disconnected');
+    case 'streamHost':
+      streamHost = undefined;
+      console.log('streamHost disconnected');
       break;
     case 'projector':
       projector = undefined;
@@ -89,32 +86,36 @@ function onClose(server : SmartWebSocket) {
       break;
     case 'controller':
       if (typeof projector !== 'undefined') {
-        projector.send(JSON.stringify({
-          from: "controller",
-          to: "projector",
-          action: "disconnect"
-        }));
+        projector.send(
+          JSON.stringify({
+            from: 'controller',
+            to: 'projector',
+            action: 'disconnect',
+          })
+        );
       }
       controller = undefined;
       console.log('controller disconnected');
       break;
     default:
-      if (typeof server.id === "number") {
-        streamers.delete(server.id);
-        if (typeof stream_host !== "undefined")
-          stream_host.send(JSON.stringify({
+      streamers.delete(Number(server.id));
+      if (typeof streamHost !== 'undefined') {
+        streamHost.send(
+          JSON.stringify({
             from: server.id,
-            to: "stream_host",
-            action: "disconnect"
-          }));
-        console.log(server.id + ' disconnected');
+            to: 'streamHost',
+            action: 'disconnect',
+          })
+        );
       }
+
+      console.log(server.id + ' disconnected');
   }
 }
 
-function onMessage(message : string) {
+function onMessage(message: string) {
   // {from, to, action, data}
-  let json : ServerMessage;
+  let json: ServerMessage;
   try {
     json = JSON.parse(message);
   } catch (e) {
@@ -123,58 +124,51 @@ function onMessage(message : string) {
   }
 
   console.log("%s sent '%s' to %s", json.from, json.action, json.to);
-  
+
   switch (json.to) {
     case 'projector':
-      if (typeof projector !== "undefined")
-        projector.send(message);
+      if (typeof projector !== 'undefined') projector.send(message);
       break;
     case 'controller':
-      if (typeof controller !== "undefined")
-        controller.send(message);
+      if (typeof controller !== 'undefined') controller.send(message);
       break;
-    case 'stream_host':
-      if (typeof stream_host !== "undefined")
-        stream_host.send(message);
+    case 'streamHost':
+      if (typeof streamHost !== 'undefined') streamHost.send(message);
       break;
     case 'all':
       switch (json.action) {
         case 'begin_video':
-          if (typeof origin_time === 'undefined') {
-            origin_time = Date.now();
+          if (typeof originTime === 'undefined') {
+            originTime = Date.now();
           }
-          json.data = origin_time;
+          json.data = String(originTime);
           message = JSON.stringify(json);
           break;
         case 'reset_video':
-          origin_time = -1;
+          originTime = -1;
           json.action = 'blackout';
           message = JSON.stringify(json);
           break;
       }
-      cur_state = json.action;
+      curState = json.action;
       for (const s of streamers.values()) {
         s.send(message);
       }
       break;
     default:
-      if (typeof json.to === "number") {
-        const streamer = streamers.get(json.to);
-        if (streamer !== undefined) {
-          streamer.send(message);
-        } else {
-          console.log("Unable to find addressee '%s'", json.to);
-        }
+      const streamer = streamers.get(Number(json.to));
+      if (streamer) {
+        streamer.send(message);
+      } else {
+        console.log("Unable to find addressee '%s'", json.to);
       }
   }
 }
 
-
-wss.on('connection', (server : SmartWebSocket, request : IncomingMessage) => {
-  onOpen(server, request.headers["sec-websocket-protocol"]);
+wss.on('connection', (server: SmartWebSocket, request: IncomingMessage) => {
+  onOpen(server, request.headers['sec-websocket-protocol']);
 
   server.on('close', () => onClose(server));
-  
+
   server.on('message', onMessage);
 });
-
