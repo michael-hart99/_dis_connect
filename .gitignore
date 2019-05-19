@@ -4,5 +4,4 @@ server/private_data.ts
 .*.swp
 website/*.mov
 Makefile
-dist/*
 
