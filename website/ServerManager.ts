@@ -1,42 +1,51 @@
 'use strict';
 
-const HOST = "www.thejobdance.com";
+const HOST = 'www.thejobdance.com';
 const PORT = 789;
 
-class ServerManager {
-  // TODO
-  _id : string | number;
+export interface ServerMessage {
+  from: string;
+  to: string;
+  action: string;
+  data: any;
+};
 
-  // TODO
-  _handlers : Map<string, Function>;
+export class ServerManager {
+  /* TODO */
+  private _id: string;
 
-  // TODO
-  _connection : WebSocket;
+  /* TODO */
+  private _handlers: Map<string, Function>;
+
+  /* TODO */
+  private _connection: WebSocket;
 
   /**
    * TODO
    */
-  constructor(protocolID : string) {
+  public constructor(protocolID: string) {
     this._id = protocolID;
 
     this._handlers = new Map();
 
-    this._connection = new WebSocket("wss://" + HOST + ":" + PORT,
-                                     "request-" + protocolID);
+    this._connection = new WebSocket(
+      'wss://' + HOST + ':' + PORT,
+      'request-' + protocolID
+    );
 
-    this._connection.onerror = () => 
-        console.log("Error connecting to server");
+    this._connection.onerror = (): void =>
+      console.log('Error connecting to server');
 
     let thisObj = this;
-    this._connection.onmessage = function(e){ 
+    this._connection.onmessage = (e: MessageEvent): void => {
       let json = JSON.parse(e.data);
-      console.log("received %s from %s", json.action, json.from);
-      
+      console.log('received %s from %s', json.action, json.from);
+
       let handler = thisObj._handlers.get(json.action);
       if (handler !== undefined) {
         handler(json);
       } else {
-        console.log("Unexpected action received: %s", json.action);
+        console.log('Unexpected action received: %s', json.action);
       }
     };
   }
@@ -44,28 +53,32 @@ class ServerManager {
   /**
    * TODO
    */
-  static sleep(ms : number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  public static sleep(ms: number): Promise<void> {
+    return new Promise((resolve: Function): number => setTimeout(resolve, ms));
   }
 
   /**
    * TODO
    */
-  setID(id : string | number) {
+  public setID(id: string): void {
     this._id = id;
   }
 
   /**
    * TODO
    */
-  addHandler(action : string, fn : Function) {
+  public addHandler(action: string, fn: Function): void {
     this._handlers.set(action, fn);
   }
 
   /**
    * TODO
    */
-  async sendSignal(to : string | number, action : string, data : any) {
+  public async sendSignal(
+    to: string,
+    action: string,
+    data: any
+  ): Promise<void> {
     let count = 0;
     while (this._connection.readyState === 0 && count < 400) {
       await ServerManager.sleep(5);
@@ -76,7 +89,7 @@ class ServerManager {
         from: this._id,
         to: to,
         action: action,
-        data: data
+        data: data,
       };
       this._connection.send(JSON.stringify(json));
     }
@@ -84,4 +97,3 @@ class ServerManager {
 }
 
 export default ServerManager;
-
