@@ -1,7 +1,8 @@
 node_modules
 package-lock.json
-server/private_data.js
+server/private_data.ts
 .*.swp
 website/*.mov
 Makefile
+dist/*
 
