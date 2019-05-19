@@ -1,13 +1,13 @@
 'use strict';
 
-import ServerManager from "../ServerManager.js";
-import WebRTCTools   from "../WebRTCTools.js";
+import { ServerManager, ServerMessage } from '../ServerManager.ts';
+import WebRTCTools from '../WebRTCTools.ts';
 
 /////////////////////////
 //  SIGNALLING SERVER  //
 /////////////////////////
 
-const SM = new ServerManager("stream_host");
+const SM = new ServerManager("streamHost");
 
 SM.addHandler( "candidate", processCandidate);
 SM.addHandler(     "offer", processOffer);
@@ -17,8 +17,13 @@ SM.addHandler("disconnect", processDisconnect);
 //  WebRTC  //
 //////////////
 
+interface StreamConn {
+  peerConn: RTCPeerConnection;
+  stream: MediaStream;
+};
+
 // TODO
-var conns = new Map();
+var conns: Map<number, StreamConn> = new Map();
 
 // TODO
 var inUse = [-1, -1, -1,
@@ -28,30 +33,31 @@ var inUse = [-1, -1, -1,
 /**
  * TODO
  */
-function initConn(from) {
-  let conn = {};
-  conn.peerConn = WebRTCTools.createPeerConn(SM, from);
-  conns.set(from, conn);
+function initConn(from: string): RTCPeerConnection {
+  let peerConn = WebRTCTools.createPeerConn(SM, from);
   
-  let video = document.querySelector('#stream' + (from % 9 + 1));
-  conn.peerConn.ontrack = (e) => {
+  let video = document.querySelector('#stream' + (Number(from) % 9 + 1)) as HTMLVideoElement;
+  peerConn.ontrack = (e: RTCTrackEvent) => {
     console.log("stream received");
     video.srcObject = e.streams[0];
-    conn.stream = e.streams[0];
-    inUse[from % 9] = from;
+    conns.set(Number(from), {peerConn: peerConn, stream: e.streams[0]});
+    inUse[Number(from) % 9] = Number(from);
   }
 
-  return conn.peerConn;
+  return peerConn;
 }
 
-function processCandidate(json) {
-  WebRTCTools.receiveCandidate(conns.get(json.from).peerConn, json);
+function processCandidate(json: ServerMessage): void {
+  let conn = conns.get(Number(json.from));
+  if (conn) {
+    WebRTCTools.receiveCandidate(conn.peerConn, json);
+  }
 }
 
 /**
  * TODO
  */
-function processOffer(json) {
+function processOffer(json: ServerMessage): void {
   let peerConn = initConn(json.from);
 
   WebRTCTools.receiveOffer(SM, peerConn, json);
@@ -69,7 +75,7 @@ const MAX_FLICKER_DELAY = 15;
 /**
  * TODO
  */
-async function flicker() {
+async function flicker(): Promise<void> {
   if (conns.size > 9) {
     let stream_keys = Array.from(conns.keys());
 
@@ -86,16 +92,22 @@ async function flicker() {
       for (let i = 0; i < inUse.length; ++i) {
         if (inUse[i] === chosen_stream) {
           inUse[i] = chosen_unused_stream;
-          let video = document.querySelector('#stream' + (i + 1));
-          video.srcObject = conns.get(chosen_unused_stream).stream;
+          let video = document.querySelector('#stream' + (i + 1)) as HTMLVideoElement;
+          let stream = conns.get(chosen_unused_stream);
+          if (stream) {
+            video.srcObject = stream.stream;
+          }
         }
       }
     }
 
     inUse[chosen_video] = chosen_stream;
-    let video = document.querySelector('#stream' + (chosen_video + 1));
-    video.srcObject = conns.get(chosen_stream).stream;
-  
+    let video = document.querySelector('#stream' + (chosen_video + 1)) as HTMLVideoElement;
+    let stream = conns.get(chosen_stream);
+    if (stream) {
+      video.srcObject = stream.stream;
+    }
+
     console.log("flickered");
   }
   await ServerManager.sleep(Math.random() * ((MAX_FLICKER_DELAY - MIN_FLICKER_DELAY) * 1000)
@@ -106,18 +118,17 @@ async function flicker() {
 /**
  * TODO
  */
-function processDisconnect(json) {
+function processDisconnect(json: ServerMessage) {
   try {
-    conns.delete(json.from);
+    conns.delete(Number(json.from));
     for (let i = 0; i < inUse.length; ++i) {
-      if (inUse[i] === json.from) {
+      if (inUse[i] === Number(json.from)) {
         inUse[i] = -1;
-        let video = document.querySelector('#stream' + (i + 1));
-        video.srcObject = undefined;
+        let video = document.querySelector('#stream' + (i + 1)) as HTMLVideoElement;
+        video.srcObject = null;
       }
     }
   } catch (e) {}
 }
 
 flicker();
-
