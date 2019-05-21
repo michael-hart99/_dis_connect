@@ -23,7 +23,6 @@ var conns: Map<number, StreamConn> = new Map();
 // Represents the current state of the webpage's grid of 9 videos.
 //     Values >=0 represent video squares that are in-use.
 var inUse = [-1, -1, -1, -1, -1, -1, -1, -1, -1];
-console.log(inUse);
 
 // The minimum delay between flickers (in seconds)
 const MIN_FLICKER_DELAY = 5;
@@ -51,15 +50,28 @@ function flicker(): void {
     let chosenKey = Math.floor(Math.random() * conns.size);
     let chosenStreamID = streamKeys[chosenKey];
     let chosenConn = conns.get(chosenStreamID);
-    let chosenVideo = Math.floor(Math.random() * 9);
 
     if (chosenConn) {
+      let chosenVideo: number;
+      if (chosenConn.inUseIndex === -1) {
+        // This stream can replace any of the 9 videos
+        chosenVideo = Math.floor(Math.random() * 9);
+      } else {
+        // This stream has 8 locations it could be placed: any except the
+        // current location
+        chosenVideo = Math.floor(Math.random() * 8);
+        if (chosenVideo >= chosenConn.inUseIndex) {
+          ++chosenVideo;
+        }
+      }
+
       // The ID of the stream being replaced
-      let prevStreamID = inUse[chosenConn.inUseIndex];
+      let prevStreamID = inUse[chosenVideo];
 
       // If this stream was already on-screen, choose one from off-screen to
       // take its previous spot
       if (inUse.includes(chosenStreamID)) {
+        // An array of the non-visible streams' IDs
         let notInUse = streamKeys.filter((x): boolean => !inUse.includes(x));
 
         let chosenUnusedKey = Math.floor(Math.random() * notInUse.length);
@@ -120,20 +132,21 @@ function initConn(from: string): RTCPeerConnection {
   // Update video element with live stream once connection is established
   peerConn.ontrack = (e: RTCTrackEvent): void => {
     console.log('stream received');
-    let useIndex = fromAsNum % 9;
+
+    let vidIndex = fromAsNum % 9;
     video.srcObject = e.streams[0];
     conns.set(fromAsNum, {
       peerConn: peerConn,
       stream: e.streams[0],
-      inUseIndex: useIndex,
+      inUseIndex: vidIndex,
     });
-    if (inUse[useIndex] !== -1) {
-      let prevStream = conns.get(inUse[useIndex]);
+    if (inUse[vidIndex] !== -1) {
+      let prevStream = conns.get(inUse[vidIndex]);
       if (prevStream) {
         prevStream.inUseIndex = -1;
       }
     }
-    inUse[useIndex] = fromAsNum;
+    inUse[vidIndex] = fromAsNum;
   };
 
   return peerConn;
@@ -176,10 +189,37 @@ function processDisconnect(json: ServerMessage): void {
       '#stream' + (thisConn.inUseIndex + 1)
     ) as HTMLVideoElement;
     const src = video.srcObject as MediaStream | null;
-    if (src !== null) {
-      src.getTracks()[0].stop();
-      video.srcObject = null;
-      inUse[thisConn.inUseIndex] = -1;
+
+    if (conns.size > 9) {
+      // There is a stream that could fill this position, select a random one
+
+      // An array of the non-visible streams' IDs
+      let notInUse = Array.from(conns.keys()).filter(
+        (x): boolean => !inUse.includes(x)
+      );
+
+      // The connection that will take this stream's position
+      let replacementID = -1;
+      let replacementConn = null;
+
+      let unusedKey = Math.floor(Math.random() * notInUse.length);
+      replacementID = notInUse[unusedKey];
+      replacementConn = conns.get(replacementID);
+
+      if (src !== null && replacementConn) {
+        src.getTracks()[0].stop();
+        inUse[thisConn.inUseIndex] = replacementID;
+        video.srcObject = replacementConn.stream;
+        replacementConn.inUseIndex = thisConn.inUseIndex;
+      }
+    } else {
+      // There are no streams that could take the place of this one
+
+      if (src !== null) {
+        src.getTracks()[0].stop();
+        inUse[thisConn.inUseIndex] = -1;
+        video.srcObject = null;
+      }
     }
     conns.delete(Number(json.from));
   }
