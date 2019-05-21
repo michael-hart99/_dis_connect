@@ -28,7 +28,6 @@ export class WebRTCTools {
       if (peerConn && e && e.candidate) {
         var candidate = e.candidate;
         SM.sendSignal(to, 'candidate', candidate as RTCIceCandidateInit);
-        console.log('ICE sent');
       }
     };
 
@@ -119,7 +118,6 @@ export class WebRTCTools {
       (sdp: RTCSessionDescriptionInit): void => {
         peerConn.setLocalDescription(sdp);
         SM.sendSignal(to, 'offer', sdp);
-        console.log('offer sent');
       }
     );
   }
@@ -141,6 +139,8 @@ export class WebRTCTools {
     peerConn.setRemoteDescription(
       new RTCSessionDescription(json.data as RTCSessionDescriptionInit)
     );
+    console.log('processed offer');
+
     const sdpConstraints = {
       offerToReceiveAudio: false,
       offerToReceiveVideo: true,
@@ -150,7 +150,6 @@ export class WebRTCTools {
         peerConn.setLocalDescription(sdp).then(
           (): void => {
             SM.sendSignal(json.from, 'answer', sdp);
-            console.log('answer sent');
           }
         );
       }
