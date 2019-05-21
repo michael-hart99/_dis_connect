@@ -3,7 +3,7 @@ import fs from 'fs';
 import https from 'https';
 import ws from 'ws';
 
-import { PORT, PATH_TO_SSL, ServerMessage } from './ServerInfo';
+import { PORT, SSL_CERT, SSL_KEY, ServerMessage } from './ServerInfo';
 
 /**
  * A wrapper for a WebSocket that adds an ID.
@@ -16,8 +16,8 @@ interface SmartWebSocket {
 
 // The server that listens for connections
 const server = https.createServer({
-  cert: fs.readFileSync(PATH_TO_SSL + 'fullchain.pem'),
-  key: fs.readFileSync(PATH_TO_SSL + 'privkey.pem'),
+  cert: fs.readFileSync(SSL_CERT),
+  key: fs.readFileSync(SSL_KEY),
 });
 
 // A WebSocketServer formed from the HTTPS server

@@ -1,7 +1,0 @@
-const privateData = {
-    PORT: /* port to run server on */,
-    PATH_TO_SSL: /* location of SSL/HTTPS keys */
-};
-
-export default privateData;
-
