@@ -1,6 +1,5 @@
 node_modules
-package-lock.json
-server/private_data.ts
+server/ServerInfo.ts
 .*.swp
 website/*.mov
 Makefile
