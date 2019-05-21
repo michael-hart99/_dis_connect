@@ -1,0 +1,70 @@
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+  background-color: black
+}
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+}
+
+.video-mosaic {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  margin: 0
+}
+.video-line {
+  height: 33%;
+}
+.video-feed {
+  width: 33%;
+  height: 100%;
+}
+
+.button-row {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.control-button {
+  background: #555555;
+  margin-left: 20px;
+  margin-right: 20px;
+  height: 200px;
+  width: 200px;
+  font-size: 36px;
+}
+
+#stream-button {
+  background: #cccccc;
+  text-align: center;
+  position: fixed;
+  height: 50%;
+  width: 50%;
+  font-size: 64px;
+  margin-top: 10%;
+  margin-left: 25%;
+  z-index: 1;
+}
+.button-text {
+  top: 50%;
+}
+.layered-elt {
+  position: absolute;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.full-video {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  z-index: -1;
+}

@@ -1,48 +1,33 @@
 <!DOCTYPE html>
-<html style="background-color: black">
+<html>
 <head>
-    <meta charset="utf-8">
-    <title>Jo B Test</title>
-    <style>
-    .button-row {
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
-    button {
-      background: #555555;
-      margin-left: 20px;
-      margin-right: 20px;
-      height: 200px;
-      width: 200px;
-      font-size: 36px;
-    }
-    </style>
+  <meta charset="utf-8">
+  <title>(dis)connect Controller</title>
+  <link rel="stylesheet" href="../styles.css">
 </head>
 
 <body>
-
 <div>
-    <video hidden id="vid" playsinline autoplay muted></video>
-
-    <div class="button-row">
-        <button id="run">Begin Stream</button>
-        <button id="disconnect">End Stream</button>
-    </div>
-    <div class="button-row">
-        <button id="begin_vid">Play Video</button>
-	<button id="blackout">Blackout</button>
-    </div>
-    <div class="button-row">
-        <button id="reset_vid">Reset Video</button>
-    </div>
-    <div class="button-row">
-        <button id="multi_stream">Allow Streaming</button>
-    </div>
+  <video id="vid" class="full-video" hidden playsinline autoplay muted></video>
 </div>
 
-<script type="module" src="../ServerManager.js"></script>
-<script type="module" src="../WebRTCTools.js"></script>
-<script type="module" src="script.js" async></script>
-
+<div id="button-grid">
+  <div class="button-row">
+      <button id="run" class="control-button">Begin Stream</button>
+  </div>
+  <div class="button-row">
+      <button id="begin_vid" class="control-button">Play Video</button>
+      <button id="blackout" class="control-button">Blackout</button>
+  </div>
+  <div class="button-row">
+      <button id="reset_vid" class="control-button">Reset Video</button>
+  </div>
+  <div class="button-row">
+      <button id="allow_stream" class="control-button">Allow Streaming</button>
+  </div>
+</div>
 </body>
+
+<script src="script.js"></script>
+
 </html>

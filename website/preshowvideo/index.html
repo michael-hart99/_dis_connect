@@ -1,63 +1,27 @@
 <!DOCTYPE html>
-<html id="page-bg" style="overflow-y: hidden; overflow-x: hidden; background-color: black; max-height: 100%; margin: 0">
+<html>
 <head>
-    <meta charset="utf-8">
-    <title>(dis)connect</title>
-    <style>
-    div {
-      position: absolute;
-      overflow-y: hidden;
-      overflow-x: hidden;
-      width: 100%;
-      height: 100%;
-      margin: 0;
-    }
-    a {
-      background: #cccccc;
-      text-align: center;
-      position: fixed;
-      height: 50%;
-      width: 50%;
-      font-size: 64px;
-      margin-top: 10%;
-      margin-left: 25%;
-      z-index: 1;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      z-index: -1;
-    }
-    body {
-      overflow-y: hidden;
-      overflow-x: hidden;
-      height: 100%;
-      width: 100%;
-      margin: 0;
-    }
-    </style>
+  <meta charset="utf-8">
+  <title>(dis)connect</title>
+  <link rel="stylesheet" href="../styles.css">
 </head>
 
 <body>
+<div class="layered-elt">
+  <a id="stream-button" hidden>
+    <span class="button-text"><br>Begin<br>Streaming<span>
+  </a>
+</div>
+ 
+<div class="layered-elt">
+  <video id="stream" class="full-video" hidden playsinline muted autoplay></video>
+</div>
 
-	<div style:"vertical-align: middle">
-		<a hidden id="stream-button">
-			<span style="top:50%"><br>Begin<br>Streaming<span>
-		</a>
-	</div>
-	<div>
-	  <video hidden id="stream" playsinline muted autoplay></video>
-	</div>
-
-	<div>
-	<video hidden loop playsinline muted src="../pre-show_video.mov" id="preshow-vid">
-	</video>
-	</div>
-
-<script type="module" src="../ServerManager.js" async></script>
-<script type="module" src="../WebRTCTools.js" async></script>
-<script type="module" src="script.js" async></script>
-
+<div class="layered-elt">
+  <video id="preshow-vid" class="full-video" hidden loop playsinline muted src="../pre-show_video.mov"></video>
+</div>
 </body>
+
+<script src="script.js"></script>
+
 </html>

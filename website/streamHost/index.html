@@ -1,68 +1,42 @@
 <!DOCTYPE html>
-<html style="height: 100%; overflow: hidden; margin:0; background-color: black">
+<html>
 <head>
     <meta charset="utf-8">
     <title>(dis)connect stream</title>
-    <style>
-    body {
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      margin: 0;
-    }
-    .outer-window {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      margin: 0
-    }
-    .audience-stream {
-      width: 33%;
-      height: 100%;
-    }
-    .video-line {
-      height: 33%;
-    }
-    </style>
+    <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body style="">
-<div id="video-grid" class="outer-window">
-    <div id="line1" class="video-line">
-      <video id="stream1" class="audience-stream" autoplay muted playsinline>
-       </video>
-      <video id="stream2" class="audience-stream" autoplay muted playsinline>
-       </video>
-      <video id="stream3" class="audience-stream" autoplay muted playsinline>
-       </video>
-    </div>
+<body>
+<div class="video-mosaic">
+  <div class="video-line">
+    <video id="stream1" class="video-feed" autoplay muted playsinline>
+     </video>
+    <video id="stream2" class="video-feed" autoplay muted playsinline>
+     </video>
+    <video id="stream3 class="video-feed" autoplay muted playsinline>
+     </video>
+  </div>
 
-    <div id="line2" class="video-line">
-      <video id="stream4" class="audience-stream" autoplay muted playsinline>
-       </video>
-      <video id="stream5" class="audience-stream" autoplay muted playsinline>
-       </video>
-      <video id="stream6" class="audience-stream" autoplay muted playsinline>
-       </video>
-    </div>
-    
-    <div id="line3" class="video-line">
-      <video id="stream7" class="audience-stream" autoplay muted playsinline>
-       </video>
-      <video id="stream8" class="audience-stream" autoplay muted playsinline>
-       </video>
-      <video id="stream9" class="audience-stream" autoplay muted playsinline>
-       </video>
-    </div>
-</div>
-<div class="outer-window">
-    <video id="vid" playsinline autoplay muted></video>
+  <div id="line2" class="video-line">
+    <video id="stream4" class="video-feed" autoplay muted playsinline>
+     </video>
+    <video id="stream5" class="video-feed" autoplay muted playsinline>
+     </video>
+    <video id="stream6" class="video-feed" autoplay muted playsinline>
+     </video>
+  </div>
+  
+  <div id="line3" class="video-line">
+    <video id="stream7" class="video-feed" autoplay muted playsinline>
+     </video>
+    <video id="stream8" class="video-feed" autoplay muted playsinline>
+     </video>
+    <video id="stream9" class="video-feed" autoplay muted playsinline>
+     </video>
+  </div>
 </div>
 </body>
 
-<script type="module" src="../ServerManager.js" async></script>
-<script type="module" src="../WebRTCTools.js" async></script>
-<script type="module" src="script.js" async></script>
+<script src="script.js"></script>
 
 </html>

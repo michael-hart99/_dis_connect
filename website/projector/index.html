@@ -1,21 +1,17 @@
 <!DOCTYPE html>
-<html style="height: 100%; width=100%; margin:0; background-color: black">
+<html>
 <head>
-    <meta charset="utf-8">
-    <title>(dis)connect</title>
+  <meta charset="utf-8">
+  <title>(dis)connect</title>
+  <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body style="height:100%; width:100%; overflow: hidden; margin: 0">
+<body>
 <div>
-    <video id="vid" playsinline autoplay muted
-	   style="height: 100%; 
-	          width: 100%; 
-                  "></video>
+  <video id="vid" class="full-video" playsinline autoplay muted></video>
 </div>
 </body>
 
-<script type="module" src="../ServerManager.js" async></script>
-<script type="module" src="../WebRTCTools.js" async></script>
-<script type="module" src="script.js" async></script>
+<script src="script.js"></script>
 
 </html>
