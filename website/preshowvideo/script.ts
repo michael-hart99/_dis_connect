@@ -1,48 +1,50 @@
 'use strict';
 
-import { ServerManager, ServerMessage } from '../ServerManager.ts';
-import WebRTCTools from '../WebRTCTools.ts';
+import { ServerMessage, StateInfo } from '../../server/ServerInfo';
+import { ServerManager } from '../ServerManager';
+import { WebRTCTools } from '../WebRTCTools';
 
-/////////////////////////
-//  SIGNALLING SERVER  //
-/////////////////////////
+// The server connection that will send/receive messages
+const SM = new ServerManager('preshow');
 
-const SM = new ServerManager("preshow");
-
-SM.addHandler(  "candidate", processCandidate);
-SM.addHandler(     "answer", processAnswer);
-SM.addHandler( "initialize", processInitialize);
-SM.addHandler(   "blackout", processBlackout);
-SM.addHandler("begin_video", processBeginVideo);
-SM.addHandler( "can_stream", processCanStream);
-
-//////////////
-//  WebRTC  //
-//////////////
-
+// The RTC connection with the streamHost
 var pc: RTCPeerConnection;
 
+/**
+ * Initializes a PeerConnection and opens the camera's video stream.
+ */
 async function initConn(): Promise<void> {
   const button = document.querySelector('#stream-button') as HTMLDivElement;
   button.hidden = true;
 
-  pc = WebRTCTools.createPeerConn(SM, "streamHost");
+  pc = WebRTCTools.createPeerConn(SM, 'streamHost');
 
-  await WebRTCTools.startStream(pc, "stream");
+  await WebRTCTools.startStream(pc, 'stream');
 
-  WebRTCTools.sendOffer(SM, pc, "streamHost");
+  WebRTCTools.sendOffer(SM, pc, 'streamHost');
 }
 
+/**
+ * Updates the RTC connection with the given ICE candidate information.
+ *
+ * @param {ServerMessage} json A message with ICE candidate information.
+ */
 function processCandidate(json: ServerMessage): void {
   WebRTCTools.receiveCandidate(pc, json);
 }
 
+/**
+ * Updates the RTC connection with the given answer details.
+ *
+ * @param {ServerMessage} json A message with peer session description information.
+ */
 function processAnswer(json: ServerMessage): void {
   WebRTCTools.receiveAnswer(pc, json);
 }
 
-///////////////////////////////
-
+/**
+ * Hides all buttons and stop all videos.
+ */
 function processBlackout(): void {
   const preshow = document.querySelector('#preshow-vid') as HTMLVideoElement;
   const button = document.querySelector('#stream-button') as HTMLDivElement;
@@ -53,7 +55,8 @@ function processBlackout(): void {
   button.hidden = true;
   stream.hidden = true;
 
-  SM.sendSignal("streamHost", "disconnect", null);
+  // Signal the streamHost that this connection is being dropped
+  SM.sendSignal('streamHost', 'disconnect', null);
 
   if (stream.srcObject instanceof MediaStream) {
     stream.srcObject.getVideoTracks()[0].stop();
@@ -61,39 +64,25 @@ function processBlackout(): void {
   stream.srcObject = null;
 }
 
+/**
+ * Start playing the embedded video at the time indicated in the message.
+ *
+ * @param {ServerMessage} json A message containing the current video time.
+ */
 function processBeginVideo(json: ServerMessage): void {
   const preshow = document.querySelector('#preshow-vid') as HTMLVideoElement;
-  preshow.oncanplay = () => {
+  preshow.oncanplay = (): void => {
     preshow.oncanplay = null;
     preshow.play();
     preshow.currentTime = (Date.now() - Number(json.data)) / 1000.0;
     preshow.hidden = false;
-  }
+  };
   preshow.load();
 }
 
-function processInitialize(json: ServerMessage): void {
-  let details = json.data.split('|');
-  SM.setID(details[0]);
-
-  switch (details[1]) {
-    case "idle":
-      break;
-    case "begin_video":
-      json.data = details[2];
-      processBeginVideo(json);
-      break;
-    case "blackout":
-      processBlackout();
-      break;
-    case "can_stream":
-      processCanStream();
-      break;
-    default:
-      console.log("Unexpected initialize state: %s", details[1]);
-  }
-}
-
+/**
+ * Stop and hide videos, revealing the stream button.
+ */
 function processCanStream(): void {
   processBlackout();
 
@@ -101,6 +90,48 @@ function processCanStream(): void {
   button.hidden = false;
 }
 
-(document
-  .querySelector('#stream-button') as HTMLDivElement)
-  .addEventListener('click', initConn);
+/**
+ * Sets the state of the webpage (intended to be one of the first messages
+ *     received). The state describes what buttons/videos are visible.
+ *
+ * @param {ServerMessage} json A message containing state information.
+ */
+function processSetState(json: ServerMessage): void {
+  let data = json.data as StateInfo;
+
+  switch (data.state) {
+    case 'idle':
+      break;
+    case 'beginVideo':
+      if (data.originTime !== null) {
+        json.data = data.originTime;
+        processBeginVideo(json);
+      }
+      break;
+    case 'blackout':
+      processBlackout();
+      break;
+    case 'canStream':
+      processCanStream();
+      break;
+    default:
+      console.log('Unexpected initialize state: %s', data.state);
+      break;
+  }
+}
+
+////////////////////////
+
+// Add action handlers to run when messages are received
+SM.addHandler('candidate', processCandidate);
+SM.addHandler('answer', processAnswer);
+SM.addHandler('setState', processSetState);
+SM.addHandler('blackout', processBlackout);
+SM.addHandler('beginVideo', processBeginVideo);
+SM.addHandler('canStream', processCanStream);
+
+// Add event to the HTML button
+(document.querySelector('#stream-button') as HTMLDivElement).addEventListener(
+  'click',
+  initConn
+);
