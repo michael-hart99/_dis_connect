@@ -1,11 +1,53 @@
-CP = cp -r
+# ${\n} will evaluate to a newline, used for more-readable printing
+define \n
 
-PATH_TO_SITE = #/path/to/www/website.com/html
 
-PAGES = projector preshowvideo stream_host controller
+endef
 
-all: $(PAGES)
+# $(blue) begins a blue-colored section, $(reset) ends any colored section
+blue  := $(shell tput setaf 14)
+reset := $(shell tput sgr0)
 
-$(PAGES):
-	$(CP) website/$@ $(PATH_TO_SITE)/
+# Uncomment value if the directories used are not writeable by the user
+SUDO? := #sudo
 
+# System commands
+LINT    := ./node_modules/.bin/eslint
+COMPILE := npm run build
+CP      := $(SUDO?) cp
+
+# Directory information
+TS_SRCS      := $(shell find . -name '*.ts' -not -path "./node_modules/*")
+JS_DIR       := dist/
+PATH_TO_SITE := # /path/to/www/mydomain.com/html/
+SCRIPT_FILE  := script.js
+
+# The pages that will be compiled into the website's directory
+PAGES := projector preshowvideo streamHost controller
+
+# First lints, then compiles, then copies
+all: lint compile copy
+
+lint:
+	$(info ${\n}$(blue) Linting TypeScript files...$(reset)${\n})
+	$(foreach SRC, \
+	          $(TS_SRCS), \
+	          $(LINT) $(SRC) --fix;${\n})
+
+compile:
+	$(info ${\n}$(blue) Compiling TypeScript for the web...$(reset)${\n})
+	
+	$(COMPILE)
+
+copy:
+	$(info ${\n}$(blue) Copying JavaScript into website files...$(reset)${\n})
+	
+	$(foreach PAGE, \
+	          $(PAGES), \
+	          $(CP) $(JS_DIR)$(PAGE).js \
+	                $(PATH_TO_SITE)$(PAGE)/$(SCRIPT_FILE);${\n})
+	$(CP) website/styles.css $(PATH_TO_SITE)
+	$(CP) website/controller/index.html $(PATH_TO_SITE)controller/
+	$(CP) website/preshowvideo/index.html $(PATH_TO_SITE)preshowvideo/
+	$(CP) website/projector/index.html $(PATH_TO_SITE)projector/
+	$(CP) website/streamHost/index.html $(PATH_TO_SITE)streamHost/
