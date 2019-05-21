@@ -3,16 +3,6 @@
 import { HOST, PORT, ServerMessage, PacketData } from '../server/ServerInfo';
 
 /**
- * Returns a promise that resolves in a given number of milliseconds.
- *
- * @param {number} ms The number of milliseconds before the returned promise
- *      resolves.
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve: Function): number => setTimeout(resolve, ms));
-}
-
-/**
  * PartialMessage represents a message that doesn't have "from" information.
  *     This is likely because the connection hasn't transmitted it's ID.
  */
@@ -127,26 +117,17 @@ export class ServerManager {
    * @param {string}     action The type of action to take.
    * @param {PacketData} data   Any data needed to perform the action.
    */
-  public async sendSignal(
-    to: string,
-    action: string,
-    data: PacketData
-  ): Promise<void> {
-    if (this._ready) {
-      let count = 0;
-      while (this._connection.readyState === 0 && count < 400) {
-        await sleep(5);
-        count++;
-      }
-      if (this._connection.readyState === 1 && this._id) {
-        let message: ServerMessage = {
-          from: this._id,
-          to: to,
-          action: action,
-          data: data,
-        };
-        this._connection.send(JSON.stringify(message));
-      }
+  public sendSignal(to: string, action: string, data: PacketData): void {
+    console.log('sending %s to %s', action, to);
+
+    if (this._ready && this._id) {
+      let message: ServerMessage = {
+        from: this._id,
+        to: to,
+        action: action,
+        data: data,
+      };
+      this._connection.send(JSON.stringify(message));
     } else {
       let message: PartialMessage = {
         to: to,
