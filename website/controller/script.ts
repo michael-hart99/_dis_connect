@@ -12,8 +12,12 @@ var pc: RTCPeerConnection;
 
 /**
  * Initializes a PeerConnection and opens the camera's video stream.
+ *     Hides all buttons to fill screen with video.
  */
 async function initConn(): Promise<void> {
+  const buttons = document.querySelector('#button-grid') as HTMLDivElement;
+  buttons.hidden = true;
+
   pc = WebRTCTools.createPeerConn(SM, 'projector');
 
   await WebRTCTools.startStream(pc, 'vid');
@@ -44,8 +48,11 @@ function processAnswer(json: ServerMessage): void {
  *     reflect that.
  */
 function processDisconnect(): void {
+  const buttons = document.querySelector('#button-grid') as HTMLDivElement;
   const video = document.getElementById('vid') as HTMLVideoElement;
   const src = video.srcObject as MediaStream;
+
+  buttons.hidden = false;
 
   video.hidden = true;
   src.getTracks()[0].stop();
@@ -91,7 +98,7 @@ SM.addHandler('answer', processAnswer);
   'click',
   initConn
 );
-(document.querySelector('#disconnect') as HTMLButtonElement).addEventListener(
+(document.querySelector('#vid') as HTMLButtonElement).addEventListener(
   'click',
   processDisconnect
 );
@@ -107,7 +114,7 @@ SM.addHandler('answer', processAnswer);
   'click',
   blackout
 );
-(document.querySelector('#multi_stream') as HTMLButtonElement).addEventListener(
+(document.querySelector('#allow_stream') as HTMLButtonElement).addEventListener(
   'click',
   canStream
 );
