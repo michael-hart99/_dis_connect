@@ -1,120 +1,155 @@
 import { IncomingMessage } from 'http';
 import fs from 'fs';
 import https from 'https';
+import ws from 'ws';
 
-import privateData from './private_data';
+import { PORT, PATH_TO_SSL, ServerMessage } from './ServerInfo';
 
-const WebSocketServer = require('ws').Server;
-
+/**
+ * A wrapper for a WebSocket that adds an ID.
+ */
 interface SmartWebSocket {
-  id: string | number;
+  id: string | undefined;
   send: (message: string) => void;
   on: Function;
 }
-interface ServerMessage {
-  from: string;
-  to: string;
-  action: string;
-  data: string;
-}
 
+// The server that listens for connections
 const server = https.createServer({
-  cert: fs.readFileSync(privateData.PATH_TO_SSL + 'fullchain.pem'),
-  key: fs.readFileSync(privateData.PATH_TO_SSL + 'privkey.pem'),
+  cert: fs.readFileSync(PATH_TO_SSL + 'fullchain.pem'),
+  key: fs.readFileSync(PATH_TO_SSL + 'privkey.pem'),
 });
 
-const wss = new WebSocketServer({ server });
-server.listen(privateData.PORT);
+// A WebSocketServer formed from the HTTPS server
+const socketServer = new ws.Server({ server });
+server.listen(PORT);
 
-let originTime: number;
+// The time when the video was started (used to sync the video playback)
+let originTime: number | null = null;
+
+// The current state of preshowvideo
 let curState = 'idle';
 
+// The definite server connections
 let streamHost: SmartWebSocket | undefined,
-    controller: SmartWebSocket | undefined,
-    projector: SmartWebSocket | undefined;
+  controller: SmartWebSocket | undefined,
+  projector: SmartWebSocket | undefined;
+
+// The audience's connections
 const streamers = new Map<number, SmartWebSocket>();
+// The ID that will be given to the next audience connection
 let curID = 0;
 
-function onOpen(server: SmartWebSocket,
-                request: string | string[] | undefined) {
+/**
+ * A function intended to be executed when a new connection is opened.
+ *     Sends initializing data and stores the connection.
+ *
+ * @param {SmartWebSocket}                server  The server that was opened.
+ * @param {string | string[] | undefined} request The header of the connection.
+ */
+function onOpen(
+  server: SmartWebSocket,
+  request: string | string[] | undefined
+): void {
   switch (request) {
     case 'request-streamHost':
       server.id = 'streamHost';
       streamHost = server;
-      console.log('streamHost connected');
       break;
     case 'request-projector':
       server.id = 'projector';
       projector = server;
-      console.log('projector connected');
       break;
     case 'request-preshow':
-      server.id = curID;
+      server.id = String(curID);
+      streamers.set(curID, server);
       ++curID;
-
       server.send(
         JSON.stringify({
           from: 'SERVER',
-          to: String(server.id),
-          action: 'initialize',
-          data: String(server.id) + '|' + curState + '|' + String(originTime),
+          to: server.id,
+          action: 'setState',
+          data: {
+            state: curState,
+            originTime: originTime,
+          },
         })
       );
-
-      streamers.set(server.id, server);
-      console.log(server.id + ' connected');
       break;
     case 'request-controller':
       server.id = 'controller';
       controller = server;
-      console.log('controller connected');
       break;
-    default:
-      console.log('unknown connection request: ' + request);
+  }
+  if (server.id) {
+    console.log(server.id + ' connected');
+    server.send(
+      JSON.stringify({
+        from: 'SERVER',
+        to: server.id,
+        action: '_initialize',
+        data: server.id,
+      })
+    );
+  } else {
+    console.log('unknown connection request: ' + request);
   }
 }
 
-function onClose(server: SmartWebSocket) {
+/**
+ * A function intended to be executed when a connection is closed. Resets all
+ *     data used to store that connection.
+ *
+ * @param {SmartWebSocket} server The server that has disconnected.
+ */
+function onClose(server: SmartWebSocket): void {
   switch (server.id) {
     case 'streamHost':
       streamHost = undefined;
-      console.log('streamHost disconnected');
       break;
     case 'projector':
       projector = undefined;
-      console.log('projector disconnected');
       break;
     case 'controller':
-      if (typeof projector !== 'undefined') {
+      // Send a message to disconnect the stream in case it is still live
+      if (projector) {
         projector.send(
           JSON.stringify({
             from: 'controller',
             to: 'projector',
             action: 'disconnect',
+            data: null,
           })
         );
       }
       controller = undefined;
-      console.log('controller disconnected');
       break;
     default:
-      streamers.delete(Number(server.id));
-      if (typeof streamHost !== 'undefined') {
+      // Send a message to disconnect the stream in case it is still live
+      if (streamHost) {
         streamHost.send(
           JSON.stringify({
             from: server.id,
             to: 'streamHost',
             action: 'disconnect',
+            data: null,
           })
         );
       }
-
-      console.log(server.id + ' disconnected');
+      streamers.delete(Number(server.id));
+      break;
   }
+
+  console.log(server.id + ' disconnected');
 }
 
-function onMessage(message: string) {
-  // {from, to, action, data}
+/**
+ * A function intended to be executed when the connection receives a message.
+ *     Routes the message to the intended recipient.
+ *
+ * @param {string} message The received ServerMessage formatted as a string.
+ */
+function onMessage(message: string): void {
   let json: ServerMessage;
   try {
     json = JSON.parse(message);
@@ -127,29 +162,30 @@ function onMessage(message: string) {
 
   switch (json.to) {
     case 'projector':
-      if (typeof projector !== 'undefined') projector.send(message);
+      if (projector) projector.send(message);
       break;
     case 'controller':
-      if (typeof controller !== 'undefined') controller.send(message);
+      if (controller) controller.send(message);
       break;
     case 'streamHost':
-      if (typeof streamHost !== 'undefined') streamHost.send(message);
+      if (streamHost) streamHost.send(message);
       break;
     case 'all':
       switch (json.action) {
-        case 'begin_video':
-          if (typeof originTime === 'undefined') {
+        case 'beginVideo':
+          if (originTime === null) {
             originTime = Date.now();
           }
-          json.data = String(originTime);
+          json.data = originTime;
           message = JSON.stringify(json);
           break;
-        case 'reset_video':
-          originTime = -1;
+        case 'resetVideo':
+          originTime = null;
           json.action = 'blackout';
           message = JSON.stringify(json);
           break;
       }
+
       curState = json.action;
       for (const s of streamers.values()) {
         s.send(message);
@@ -162,13 +198,18 @@ function onMessage(message: string) {
       } else {
         console.log("Unable to find addressee '%s'", json.to);
       }
+      break;
   }
 }
 
-wss.on('connection', (server: SmartWebSocket, request: IncomingMessage) => {
-  onOpen(server, request.headers['sec-websocket-protocol']);
+// Set the earlier functions to run on corresponding server events
+socketServer.on(
+  'connection',
+  (server: SmartWebSocket, request: IncomingMessage): void => {
+    onOpen(server, request.headers['sec-websocket-protocol']);
 
-  server.on('close', () => onClose(server));
+    server.on('close', (): void => onClose(server));
 
-  server.on('message', onMessage);
-});
+    server.on('message', onMessage);
+  }
+);
