@@ -51,9 +51,9 @@ function processBlackout(): void {
   const stream = document.querySelector('#stream') as HTMLVideoElement;
 
   preshow.hidden = true;
-  preshow.pause();
   button.hidden = true;
   stream.hidden = true;
+  preshow.pause();
 
   // Signal the streamHost that this connection is being dropped
   SM.sendSignal('streamHost', 'disconnect', null);
@@ -71,13 +71,36 @@ function processBlackout(): void {
  */
 function processBeginVideo(json: ServerMessage): void {
   const preshow = document.querySelector('#preshow-vid') as HTMLVideoElement;
-  preshow.oncanplay = (): void => {
-    preshow.oncanplay = null;
+  const button = document.querySelector('#stream-button') as HTMLDivElement;
+  const stream = document.querySelector('#stream') as HTMLVideoElement;
+
+  button.hidden = true;
+  stream.hidden = true;
+
+  // Signal the streamHost that this connection is being dropped
+  SM.sendSignal('streamHost', 'disconnect', null);
+
+  if (stream.srcObject instanceof MediaStream) {
+    stream.srcObject.getVideoTracks()[0].stop();
+  }
+  stream.srcObject = null;
+
+  // If too many videos are open on one machine, the video will stall and stop.
+  if (preshow.readyState >= 2) {
+    // Enough data is loaded
     preshow.play();
-    preshow.currentTime = (Date.now() - Number(json.data)) / 1000.0;
+    preshow.currentTime =
+      ((Date.now() - Number(json.data)) / 1000.0) % preshow.duration;
     preshow.hidden = false;
-  };
-  preshow.load();
+  } else {
+    preshow.oncanplaythrough = (): void => {
+      preshow.oncanplaythrough = null;
+      preshow.play();
+      preshow.currentTime =
+        ((Date.now() - Number(json.data)) / 1000.0) % preshow.duration;
+      preshow.hidden = false;
+    };
+  }
 }
 
 /**
@@ -109,10 +132,17 @@ function processSetState(json: ServerMessage): void {
       }
       break;
     case 'blackout':
-      processBlackout();
       break;
     case 'canStream':
-      processCanStream();
+      const preshow = document.querySelector(
+        '#preshow-vid'
+      ) as HTMLVideoElement;
+      const button = document.querySelector('#stream-button') as HTMLDivElement;
+      const stream = document.querySelector('#stream') as HTMLVideoElement;
+
+      preshow.hidden = true;
+      button.hidden = false;
+      stream.hidden = true;
       break;
     default:
       console.log('Unexpected initialize state: %s', data.state);
