@@ -16,6 +16,9 @@ module.exports = {
     projector:    './website/projector/script.ts',
     streamHost:   './website/streamHost/script.ts'
   },
+  resolve: {
+   extensions: ['.js', '.ts']
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js'
