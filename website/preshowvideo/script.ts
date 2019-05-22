@@ -101,6 +101,7 @@ function processBeginVideo(json: ServerMessage): void {
         ((Date.now() - Number(json.data)) / 1000.0) % preshow.duration;
       preshow.hidden = false;
     };
+    preshow.load();
   }
 }
 
