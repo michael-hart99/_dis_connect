@@ -6,7 +6,10 @@ tput sgr0;
 
 source $(dirname $0)/../script-info.sh;
 
-$CP ./website/controller/index.html   $PATH_TO_SITE/controller/ &&
-$CP ./website/preshowvideo/index.html $PATH_TO_SITE/preshowvideo/ &&
-$CP ./website/projector/index.html    $PATH_TO_SITE/projector/ &&
-$CP ./website/streamHost/index.html   $PATH_TO_SITE/streamHost/;
+for PAGE in $PAGES
+do
+    $CP $WEBFILES_PATH/$PAGE/index.html   $PATH_TO_SITE/$PAGE/;
+    if [ $? -ne 0 ]; then exit 1; fi;
+done
+
+$CP $WEBFILES_PATH/styles.css $PATH_TO_SITE/streamHost/;
