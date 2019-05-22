@@ -7,10 +7,16 @@ CP='sudo cp -v';
 # The file structure of the project
 JS_DIR=./dist;
 WEBFILES_PATH=./website;
+PAGES='controller preshowvideo projector streamHost';
+
+# The name of the favicon file
+FAVICON=favicon.ico;
+
+
+### INSERT YOUR INFO HERE ###
+
+# The name of the video file
+VIDEO=my_video.mp4;
 
 # The path to the live website
-PATH_TO_SITE=# /path/to/www/mywebsite.com/html;
-
-# The names of our media files
-FAVICON=favicon.ico;
-VIDEO=# my_video.mp4;
+PATH_TO_SITE=/path/to/www/mywebsite.com/html;
