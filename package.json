@@ -23,6 +23,7 @@
     "webpack-cli": "^3.3.2"
   },
   "scripts": {
+    "setup":          "./scripts/setup.sh",
     "start":          "./scripts/start-server.sh",
     "build":          "./scripts/build.sh",
     "compile":        "./scripts/compile.sh",
