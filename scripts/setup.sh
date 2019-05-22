@@ -8,7 +8,7 @@ source $(dirname $0)/../script-info.sh;
 
 for PAGE in controller preshowvideo projector streamHost
 do
-    mkdir $PATH_TO_SITE/$PAGE 2>/dev/null;
+    sudo mkdir $PATH_TO_SITE/$PAGE 2>/dev/null;
 done
 
 exit 0;
