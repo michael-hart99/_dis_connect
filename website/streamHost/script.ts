@@ -126,14 +126,21 @@ function initConn(from: string): RTCPeerConnection {
   let peerConn = WebRTCTools.createPeerConn(SM, from);
   let fromAsNum = Number(from);
 
-  let video = document.querySelector(
-    '#stream' + ((fromAsNum % 9) + 1)
-  ) as HTMLVideoElement;
   // Update video element with live stream once connection is established
   peerConn.ontrack = (e: RTCTrackEvent): void => {
     console.log('stream received');
 
     let vidIndex = fromAsNum % 9;
+    if (conns.size < 9) {
+      while (inUse[vidIndex] !== -1) {
+        vidIndex = (vidIndex + 1) % 9;
+      }
+    }
+
+    let video = document.querySelector(
+      '#stream' + (vidIndex + 1)
+    ) as HTMLVideoElement;
+
     video.srcObject = e.streams[0];
     conns.set(fromAsNum, {
       peerConn: peerConn,
@@ -184,7 +191,7 @@ function processOffer(json: ServerMessage): void {
  */
 function processDisconnect(json: ServerMessage): void {
   const thisConn = conns.get(Number(json.from));
-  if (thisConn) {
+  if (thisConn && thisConn.inUseIndex !== -1) {
     const video = document.querySelector(
       '#stream' + (thisConn.inUseIndex + 1)
     ) as HTMLVideoElement;
@@ -221,8 +228,8 @@ function processDisconnect(json: ServerMessage): void {
         video.srcObject = null;
       }
     }
-    conns.delete(Number(json.from));
   }
+  conns.delete(Number(json.from));
 }
 
 ///////////////
