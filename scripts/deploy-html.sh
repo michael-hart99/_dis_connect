@@ -12,4 +12,4 @@ do
     if [ $? -ne 0 ]; then exit 1; fi;
 done
 
-$CP $WEBFILES_PATH/styles.css $PATH_TO_SITE/streamHost/;
+$CP $WEBFILES_PATH/styles.css $PATH_TO_SITE/;
