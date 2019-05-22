@@ -16,10 +16,15 @@ interface SmartWebSocket {
 }
 
 // The server that listens for connections
-const server = https.createServer({
-  cert: fs.readFileSync(SSL_CERT),
-  key: fs.readFileSync(SSL_KEY),
-});
+let server: https.Server;
+try {
+  server = https.createServer({
+    cert: fs.readFileSync(SSL_CERT),
+    key: fs.readFileSync(SSL_KEY),
+  });
+} catch (e) {
+  server = https.createServer();
+}
 
 // A WebSocketServer formed from the HTTPS server
 const socketServer = new ws.Server({ server });
