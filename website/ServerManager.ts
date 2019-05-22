@@ -50,17 +50,10 @@ export class ServerManager {
 
     this._handlers = new Map();
 
-    try {
-      this._connection = new WebSocket(
-        'wss://' + HOST + ':' + PORT,
-        'request-' + requestLabel
-      );
-    } catch (e) {
-      this._connection = new WebSocket(
-        'ws://' + HOST + ':' + PORT,
-        'request-' + requestLabel
-      );
-    }
+    this._connection = new WebSocket(
+      'wss://' + HOST + ':' + PORT,
+      'request-' + requestLabel
+    );
 
     this._connection.onerror = (): void =>
       console.log('Error connecting to server');
