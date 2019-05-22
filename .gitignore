@@ -1,6 +1,7 @@
 node_modules
 server/ServerInfo.ts
 .*.swp
-website/*.mov
+*.mov
+*.mp4
 Makefile
 
