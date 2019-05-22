@@ -1,0 +1,16 @@
+# THIS IS A SOURCE FOR THE scripts/ DIRECTORY
+
+# The command used to copy files to the live website.
+# 'sudo' can be removed if the website directory is not read/write protected,
+CP='sudo cp -v';
+
+# The file structure of the project
+JS_DIR=./dist;
+WEBFILES_PATH=./website;
+
+# The path to the live website
+PATH_TO_SITE=# /path/to/www/mywebsite.com/html;
+
+# The names of our media files
+FAVICON=favicon.ico;
+VIDEO=# my_video.mp4;

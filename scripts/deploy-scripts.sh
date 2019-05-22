@@ -4,10 +4,7 @@ tput setaf 14;
 printf "\n Deploying JavaScript files...\n\n";
 tput sgr0;
 
-CP='sudo cp -v';
-
-JS_DIR=./dist;
-PATH_TO_SITE=/var/www/thejobdance.com/html;
+source $(dirname $0)/../script-info.sh;
 
 for PAGE in controller preshowvideo projector streamHost
 do

@@ -1,0 +1,8 @@
+export const HOST = /* 'www.mywebsite.com' */;
+
+export const PORT = /* The port for websocket connections(e.g. 6767) */;
+
+export const SSL_CERT = /* '/path/to/mywebsite.com/fullchain.pem' */;
+export const SSL_KEY = /* '/path/to/mywebsite.com/privkey.pem' */;
+
+export const VIDEO = /* 'my_video.mp4' */;

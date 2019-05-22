@@ -1,5 +1,6 @@
 'use strict';
 
+import { VIDEO } from '../../ProjectInfo';
 import { ServerMessage, StateInfo } from '../../server/ServerInfo';
 import { ServerManager } from '../ServerManager';
 import { WebRTCTools } from '../WebRTCTools';
@@ -165,3 +166,6 @@ SM.addHandler('canStream', processCanStream);
   'click',
   initConn
 );
+
+// Add video source to video
+(document.querySelector('#preshow-vid') as HTMLVideoElement).src = VIDEO;

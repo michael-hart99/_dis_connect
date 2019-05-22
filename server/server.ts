@@ -3,7 +3,8 @@ import fs from 'fs';
 import https from 'https';
 import ws from 'ws';
 
-import { PORT, SSL_CERT, SSL_KEY, ServerMessage } from './ServerInfo';
+import { PORT, SSL_CERT, SSL_KEY } from '../ProjectInfo';
+import { ServerMessage } from './ServerInfo';
 
 /**
  * A wrapper for a WebSocket that adds an ID.

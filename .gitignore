@@ -1,7 +1,7 @@
 node_modules
-server/ServerInfo.ts
+ProjectInfo.ts
+script-info.sh
 .*.swp
 *.mov
 *.mp4
-Makefile
 

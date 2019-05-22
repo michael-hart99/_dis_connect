@@ -1,6 +1,7 @@
 'use strict';
 
-import { HOST, PORT, ServerMessage, PacketData } from '../server/ServerInfo';
+import { HOST, PORT } from '../ProjectInfo';
+import { ServerMessage, PacketData } from '../server/ServerInfo';
 
 /**
  * PartialMessage represents a message that doesn't have "from" information.
