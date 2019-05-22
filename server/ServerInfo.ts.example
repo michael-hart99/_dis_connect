@@ -2,8 +2,8 @@ export const HOST = /* www.mydomain.com */;
 
 export const PORT = /* The port to run sockets over */;
 
-export const SSL_CERT = /* /path/to/www/mydomain.com/SSL/cert.pem */;
-export const SSL_KEY = /* /path/to/www/mydomain.com/SSL/key.pem */;
+export const SSL_CERT = /* '/path/to/www/mydomain.com/SSL/cert.pem' */;
+export const SSL_KEY = /* '/path/to/www/mydomain.com/SSL/key.pem' */;
 
 export interface StateInfo {
   state: string;
