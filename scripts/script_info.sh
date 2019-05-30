@@ -42,27 +42,23 @@ auth_cp() {
         return 1
     fi
 
-    if [ -d $2 ]
+    if [ ! -e "$(dirname $2)" ]
     then
-        # dest is a directory
-        if [ ! -w $2 ]
-        then
-            # dest lacks permission
-            SUDO=1
-        fi
+        # destination directory not found
+        err_msg "Could not find destination directory $(dirname $2)"
+        return 1
+    fi
+
+    if [ ! -w "$(dirname $2)" ]
+    then
+        # dest directory lacks permission
+        SUDO=1
     else
-        # dest is a file
-        if [ ! -w "$(dirname $2)" ]
+        if [ -e $2 ] &&
+           [ ! -w $2 ]
         then
-            # dest directory lacks permission
+            # dest file lacks permission
             SUDO=1
-        else
-            if [ -e $2 ] &&
-               [ ! -w $2 ]
-            then
-                # dest file lacks permission
-                SUDO=1
-            fi
         fi
     fi
 

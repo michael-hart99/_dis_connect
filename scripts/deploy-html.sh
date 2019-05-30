@@ -18,8 +18,8 @@ do
             sudo mkdir $PATH_TO_SITE/$PAGE
         fi
     fi
-    auth_cp $WEBFILES_PATH/$PAGE/index.html   $PATH_TO_SITE/$PAGE/;
+    auth_cp $WEBFILES_PATH/$PAGE/index.html   $PATH_TO_SITE/$PAGE/index.html;
     if [ $? -ne 0 ]; then exit 1; fi;
 done
 
-auth_cp $WEBFILES_PATH/styles.css $PATH_TO_SITE/;
+auth_cp $WEBFILES_PATH/styles.css $PATH_TO_SITE/styles.css;
