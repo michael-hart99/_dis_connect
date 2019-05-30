@@ -23,12 +23,12 @@
     "webpack-cli": "^3.3.2"
   },
   "scripts": {
-    "setup":          "./scripts/setup.sh",
     "start":          "./scripts/start-server.sh",
     "build":          "./scripts/build.sh",
     "compile":        "./scripts/compile.sh",
     "lint":           "./scripts/lint.sh",
     "deploy":         "./scripts/deploy-all.sh",
+    "deploy-all":     "./scripts/deploy-all.sh",
     "deploy-scripts": "./scripts/deploy-scripts.sh",
     "deploy-html":    "./scripts/deploy-html.sh",
     "deploy-media":   "./scripts/deploy-media.sh"
