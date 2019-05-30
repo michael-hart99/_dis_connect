@@ -31,7 +31,7 @@ In order to get an HTTPS certification for a local IP, you need to use Let's Enc
 DNS certification method.
 This command begins the DNS certification process I used through Let's Encrypt.
 ```
-certbot -d bristol3.pki.enigmabridge.com --manual --preferred-challenges dns certonly
+certbot -d www.mywebsite.com --manual --preferred-challenges dns certonly
 ```
 
 ## Set-up
