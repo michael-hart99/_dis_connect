@@ -1,7 +1,9 @@
 #!/bin/bash
 
-tput setaf 14;
-printf "\n Linting Typescript files...\n\n";
-tput sgr0;
+source $(dirname $0)/script_info.sh;
 
-find website server ProjectInfo.ts -name "*.ts" -type f -exec echo Linting '{}'... \; -exec eslint {} --fix \;
+info_msg "Linting Typescript files...";
+
+find website server ProjectInfo.ts -name "*.ts" -type f \
+    -exec echo Linting '{}'... \; \
+    -exec eslint {} --fix \;

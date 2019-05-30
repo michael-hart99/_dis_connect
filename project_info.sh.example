@@ -1,0 +1,8 @@
+# The name of the favicon file
+FAVICON=favicon.ico;
+
+# The name of the video file
+VIDEO=dogs.mp4;
+
+# The path to the live website
+PATH_TO_SITE=/path/to/www/mywebsite.com/html;

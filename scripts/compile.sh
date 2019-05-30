@@ -1,7 +1,7 @@
 #!/bin/bash
 
-tput setaf 14;
-printf "\n Compiling TypeScript into JavaScript...\n\n";
-tput sgr0;
+source $(dirname $0)/script_info.sh;
+
+info_msg "Compiling TypeScript into JavaScript...";
 
 webpack;
