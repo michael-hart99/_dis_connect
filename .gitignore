@@ -1,7 +1,4 @@
 node_modules
 ProjectInfo.ts
-script-info.sh
+project_info.sh
 .*.swp
-*.mov
-*.mp4
-
