@@ -15,15 +15,6 @@ in Seattle on May 6th and 7th, 2019.
 There are also plans in the making to bring this performance and web
 application to Utah in 2020.
 
-Modify ProjectInfo.ts
-Modify script-info.sh
-
-npm install
-npm run setup
-npm run build
-
-Go view your website
-
 ## Getting started
 
 This application is used on a Linux machine. This application is untested on
@@ -134,6 +125,7 @@ time will be reset. The streaming button on "preshowvideo" will alsop disappear.
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+Many thanks to [developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample) and other WebRTC tutorials I used.
+
+I also found the diagrams on [https://www.pkc.io/blog/untangling-the-webrtc-flow/](https://www.pkc.io/blog/untangling-the-webrtc-flow/)
+to be a fantastic help.
