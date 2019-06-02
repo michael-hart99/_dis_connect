@@ -5,7 +5,7 @@
   "private": true,
   "dependencies": {
     "@types/ws": "^6.0.1",
-    "ts-node-dev": "^1.0.0-pre.39",
+    "ts-node": "^8.2.0",
     "tsc": "^1.20150623.0",
     "typescript": "^3.4.5",
     "ws": "^7.0.0"
@@ -23,15 +23,15 @@
     "webpack-cli": "^3.3.2"
   },
   "scripts": {
-    "start":          "./scripts/start-server.sh",
-    "build":          "./scripts/build.sh",
-    "compile":        "./scripts/compile.sh",
-    "lint":           "./scripts/lint.sh",
-    "deploy":         "./scripts/deploy-all.sh",
-    "deploy-all":     "./scripts/deploy-all.sh",
+    "start": "./scripts/start-server.sh",
+    "build": "./scripts/build.sh",
+    "compile": "./scripts/compile.sh",
+    "lint": "./scripts/lint.sh",
+    "deploy": "./scripts/deploy-all.sh",
+    "deploy-all": "./scripts/deploy-all.sh",
     "deploy-scripts": "./scripts/deploy-scripts.sh",
-    "deploy-html":    "./scripts/deploy-html.sh",
-    "deploy-media":   "./scripts/deploy-media.sh"
+    "deploy-html": "./scripts/deploy-html.sh",
+    "deploy-media": "./scripts/deploy-media.sh"
   },
   "repository": {
     "type": "git",
