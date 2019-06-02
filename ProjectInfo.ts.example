@@ -1,8 +1,16 @@
+// The port that the signalling server runs on
 export const PORT = 6767;
 
+// The url of our website
 export const HOST = /* 'www.mywebsite.com' */;
 
+// Set this to true if your domain is addressed to a local IP.
+//   This will cause all communications to be made locally.
+export const LOCAL_CONNS = true;
+
+// The path to the HTTPS certification keys
 export const SSL_CERT = /* '/path/to/mywebsite.com/fullchain.pem' */;
 export const SSL_KEY = /* '/path/to/mywebsite.com/privkey.pem' */;
 
+// The name of the video file
 export const VIDEO = 'dogs.mp4'
