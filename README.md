@@ -17,7 +17,7 @@ application to Utah in 2020.
 
 ## Getting started
 
-This application is used on a Linux machine. This application is untested on
+This application was created on a Linux machine. This application is untested on
 other OS (it might work on Mac but I have my doubts about windows). To set
 up this application, you will need:
 * [npm](https://www.npmjs.com/) 
@@ -25,7 +25,7 @@ up this application, you will need:
 * An HTTPS certificate for that domain name (free using [Let's Encrypt](https://letsencrypt.org))
 * [nginx](https://www.nginx.com) (or a remote server with nginx)
 
-In my setup for local connections, I set my domain to be a local IP address
+In my setup for local connections, I set my domain to resolve to a local IP address
 (i.e. 192.168.1.X) and configured a static IP for a computer which would run the server.
 In order to get an HTTPS certification for a local IP, you need to use Let's Encrypt's
 DNS certification method.
