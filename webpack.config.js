@@ -5,8 +5,14 @@ module.exports = {
   module: {
     rules: [
       {
-        use: 'ts-loader',
-        exclude: /node_modules/
+        loader: 'ts-loader',
+        options: {
+          configFile: 'tsconfig_web.jsonnet',
+          compilerOptions: {
+            "removeComments": true,
+            "noEmit": false
+          }
+        }
       }
     ]
   },
