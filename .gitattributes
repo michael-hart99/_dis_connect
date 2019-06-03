@@ -1,0 +1,6 @@
+dist linguist-generated=true
+
+*.json linguist-detectable=false
+*.jsonnet linguist-detectable=false
+prettierrc.js linguist-detectable=false
+webpack.config.js linguist-detectable=false
