@@ -1,5 +1,6 @@
 import { ServerMessage } from '../server/ServerInfo';
 import { ServerManager } from './ServerManager';
+import { LOCAL_CONNS, STUN, TURN } from '../ProjectInfo';
 
 /**
  * WebRTCTools is an uninstantiable class with helper methods to perform
@@ -22,7 +23,21 @@ export class WebRTCTools {
     SM: ServerManager,
     to: string
   ): RTCPeerConnection {
-    let peerConn = new RTCPeerConnection();
+    let peerConn: RTCPeerConnection;
+    if (LOCAL_CONNS) {
+      peerConn = new RTCPeerConnection();
+    } else {
+      peerConn = new RTCPeerConnection({
+        iceServers: [
+            { urls: 'stun:' + STUN.url },
+            {
+              urls: 'turn:' + TURN.url,
+              credential: TURN.user,
+              username: TURN.password,
+            },
+          ],
+      });
+    }
 
     peerConn.onicecandidate = (e: RTCPeerConnectionIceEvent): void => {
       if (peerConn && e && e.candidate) {
