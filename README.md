@@ -39,7 +39,7 @@ application to Utah in 2020.
 This application was created on a Linux machine. This application is untested on
 other OS (it might work on Mac but I have my doubts about windows). To set
 up this application, you will need:
-* [npm][npm_link] 
+* [npm][link_npm] 
 * A domain name you own (free domains available at [www.dot.tk][link_tk])
 * An HTTPS certificate for that domain name (free using [Let's Encrypt][link_letsencrypt])
 * [nginx][link_nginx] (or any software to create a webserver)
@@ -146,18 +146,12 @@ time will be reset. The streaming button on "preshowvideo" will alsop disappear.
 
 ## Built With
 
-* [WebRTC][link_webrtc]
- - The framework to send and receive live video data
-* [WebSockets][link_ws]
- - The library used for the signalling server
-* [Node.js][link_nodejs]
- - Used to run the backend signalling server
-* [ES Lint][link_eslint]
- - TypeScript correctness linter
-* [Prettier][link_prettier]
- - TypeScript aesthetic linter
-* [WebPack][link_webpack]
- - Used to package TypeScript into JavaScript
+* [WebRTC][link_webrtc] - The framework to send and receive live video data
+* [WebSockets][link_ws] - The library used for the signalling server
+* [Node.js][link_nodejs] - Used to run the backend signalling server
+* [ES Lint][link_eslint] - TypeScript correctness linter
+* [Prettier][link_prettier] - TypeScript aesthetic linter
+* [WebPack][link_webpack] - Used to package TypeScript into JavaScript
 
 ## Acknowledgments
 
