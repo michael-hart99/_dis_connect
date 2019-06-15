@@ -8,7 +8,20 @@ This computer will manage the connections and either record the streams or
 upload them as live video.
 The system was designed to take advantage of the locality of all the devices:
 since all devices are on the same network, the latency can be greatly reduced by
-using local connections through the router, avoiding ISP bandwidth-throttling.
+using local connections through the router, avoiding ISP bandwidth-throttling,
+which I've diagrammed below.
+
+![Diagram of Remote Connection][img_remote_conn]
+Here is a diagram of a possible WebRTC connection over remote networks. Notice
+how all of the stream information needs to be communicated to a TURN server
+and relayed to the recipient afterwards. This involves communicating the large
+stream data twice through an ISP-constrained connection.
+
+![Diagram of Local Connection][img_local_conn]
+Here is a diagram of a WebRTC connection locally. See how there is no longer a
+need to relay the connection through TURN, only communicating the stream data
+once. Also, the connection to the recipient can be done simply through the
+router, avoiding the ISP's bottleneck.
 
 This project was deployed for Jo B Dance's premiere choreography performance
 in Seattle on May 6th and 7th, 2019.
@@ -20,15 +33,15 @@ application to Utah in 2020.
 This application was created on a Linux machine. This application is untested on
 other OS (it might work on Mac but I have my doubts about windows). To set
 up this application, you will need:
-* [npm](https://www.npmjs.com/) 
-* A domain name you own (free domains available at [www.dot.tk](http://www.dot.tk))
-* An HTTPS certificate for that domain name (free using [Let's Encrypt](https://letsencrypt.org))
-* [nginx](https://www.nginx.com) (or any software to create a webserver)
+* [npm][npm_link] 
+* A domain name you own (free domains available at [www.dot.tk][link_tk])
+* An HTTPS certificate for that domain name (free using [Let's Encrypt][link_letsencrypt])
+* [nginx][link_nginx] (or any software to create a webserver)
 
 In my setup for local connections, I set my domain to resolve to a local IP address
 (i.e. 192.168.1.X) and configured a static IP for a computer which would run the server.
 In order to get an HTTPS certification for a local IP, you need to use Let's Encrypt's
-DNS certification method.
+DNS certification method (as opposed to HTTP).
 This command begins the DNS certification process I used through Let's Encrypt.
 ```
 certbot -d www.mywebsite.com --manual --preferred-challenges dns certonly
@@ -36,12 +49,12 @@ certbot -d www.mywebsite.com --manual --preferred-challenges dns certonly
 
 Note: The project is set-up by default to use public STUN and TURN services. There
 are security vulnerabilities to this(particularly TURN) and if you are interested in
-hosting your own STUN/TURN, it is incredibly simple using [coturn](https://github.com/coturn/coturn).
+hosting your own STUN/TURN, it is incredibly simple using [coturn][link_coturn].
 
 ## Set-up
 
 You'll need a website to host this service on. I recommend nginx because I found
-it reliable and easy to begin with. I found [this tutorial](https://linuxize.com/post/how-to-set-up-nginx-server-blocks-on-debian-9/)
+it reliable and easy to begin with. I found [this tutorial][link_nginx_help]
 to be a helpful and speedy nginx intro. I've included my simple server config in
 the repo as nginxserver.config.example.
 
@@ -127,16 +140,45 @@ time will be reset. The streaming button on "preshowvideo" will alsop disappear.
 
 ## Built With
 
-* [WebRTC](https://webrtc.org/) - The framework to send and receive live video data
-* [WebSockets](https://github.com/websockets/ws) - The library used for the signalling server
-* [Node.js](https://nodejs.org) - Used to run the backend signalling server
-* [ES Lint](https://eslint.org/) - TypeScript correctness linter
-* [Prettier](https://prettier.io/) - TypeScript aesthetic linter
-* [WebPack](https://webpack.js.org/) - Used to package TypeScript into JavaScript
+* [WebRTC][link_webrtc]
+ - The framework to send and receive live video data
+* [WebSockets][link_ws]
+ - The library used for the signalling server
+* [Node.js][link_nodejs]
+ - Used to run the backend signalling server
+* [ES Lint][link_eslint]
+ - TypeScript correctness linter
+* [Prettier][link_prettier]
+ - TypeScript aesthetic linter
+* [WebPack][link_webpack]
+ - Used to package TypeScript into JavaScript
 
 ## Acknowledgments
 
-Many thanks to [developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample) and other WebRTC tutorials I used.
+Many thanks to [developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample][link_mozilla_dc]
+and other WebRTC tutorials I used.
 
-I also found the diagrams on [https://www.pkc.io/blog/untangling-the-webrtc-flow/](https://www.pkc.io/blog/untangling-the-webrtc-flow/)
+I also found the diagrams on [https://www.pkc.io/blog/untangling-the-webrtc-flow/][link_webrtc_flow]
 to be a fantastic help.
+
+I created the diagrams on this page using [draw.io][link_drawio], a
+great diagramming tool.
+
+[link_npm]: https://www.npmjs.com/
+[link_tk]: http://www.dot.tk
+[link_letsencrypt]: https://letsencrypt.org
+[link_nginx]: https://www.nginx.com
+[link_coturn]: https://github.com/coturn/coturn
+[link_nginx_help]: https://linuxize.com/post/how-to-set-up-nginx-server-blocks-on-debian-9/
+[link_webrtc]: https://webrtc.org/
+[link_ws]: https://github.com/websockets/ws
+[link_nodejs]: https://nodejs.org
+[link_eslint]: https://eslint.org/
+[link_prettier]: https://prettier.io/
+[link_webpack]: https://webpack.js.org/
+[link_mozilla_dc]: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample
+[link_webrtc_flow]: https://www.pkc.io/blog/untangling-the-webrtc-flow/
+[link_drawio]: https://www.draw.io/
+
+[img_local_conn]: images/Local_Conn.png "Local Connection"
+[img_remote_conn]: images/Remote_Conn.png "Remote Connection"
