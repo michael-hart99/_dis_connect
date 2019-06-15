@@ -11,13 +11,19 @@ since all devices are on the same network, the latency can be greatly reduced by
 using local connections through the router, avoiding ISP bandwidth-throttling,
 which I've diagrammed below.
 
-![Diagram of Remote Connection][img_remote_conn]
+<p align="center">
+ <img alt="Diagram of Remote Connection" src="images/Remote_Conn.png" title="Remote Connection">
+</p>
+
 Here is a diagram of a possible WebRTC connection over remote networks. Notice
 how all of the stream information needs to be communicated to a TURN server
 and relayed to the recipient afterwards. This involves communicating the large
 stream data twice through an ISP-constrained connection.
 
-![Diagram of Local Connection][img_local_conn]
+<p align="center">
+ <img alt="Diagram of Local Connection" src="images/Local_Conn.png" title="Local Connection">
+</p>
+
 Here is a diagram of a WebRTC connection locally. See how there is no longer a
 need to relay the connection through TURN, only communicating the stream data
 once. Also, the connection to the recipient can be done simply through the
@@ -179,6 +185,3 @@ great diagramming tool.
 [link_mozilla_dc]: https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample
 [link_webrtc_flow]: https://www.pkc.io/blog/untangling-the-webrtc-flow/
 [link_drawio]: https://www.draw.io/
-
-[img_local_conn]: images/Local_Conn.png "Local Connection"
-[img_remote_conn]: images/Remote_Conn.png "Remote Connection"
