@@ -17,7 +17,7 @@ export const TURN = {
 
 // Set this to true if your domain is addressed to a local IP.
 //   This will cause all communications to be made locally.
-export const LOCAL_CONNS = true;
+export const LOCAL_CONNS = false;
 
 // The path to the HTTPS certification keys
 export const SSL_CERT = /* '/path/to/mywebsite.com/fullchain.pem' */;
