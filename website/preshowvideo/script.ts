@@ -18,6 +18,8 @@ async function initConn(): Promise<void> {
   const button = document.querySelector('#stream-button') as HTMLDivElement;
   button.hidden = true;
 
+  // Required to get IP permissions on iOS
+  await navigator.mediaDevices.getUserMedia({video: true});
   pc = WebRTCTools.createPeerConn(SM, 'streamHost');
 
   await WebRTCTools.startStream(pc, 'stream');
