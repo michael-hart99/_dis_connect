@@ -4,6 +4,17 @@ export const PORT = 6767;
 // The url of our website
 export const HOST = /* 'www.mywebsite.com' */;
 
+// STUN and TURN customization
+export const STUN = {
+  url: 'stun3.l.google.com:19302',
+};
+
+export const TURN = {
+  url: 'numb.viagenie.ca',
+  user: 'webrtc@live.com',
+  password: 'muazkh',
+}
+
 // Set this to true if your domain is addressed to a local IP.
 //   This will cause all communications to be made locally.
 export const LOCAL_CONNS = true;
