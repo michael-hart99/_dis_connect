@@ -23,7 +23,7 @@ up this application, you will need:
 * [npm](https://www.npmjs.com/) 
 * A domain name you own (free domains available at [www.dot.tk](http://www.dot.tk))
 * An HTTPS certificate for that domain name (free using [Let's Encrypt](https://letsencrypt.org))
-* [nginx](https://www.nginx.com) (or a remote server with nginx)
+* [nginx](https://www.nginx.com) (or any software to create a webserver)
 
 In my setup for local connections, I set my domain to resolve to a local IP address
 (i.e. 192.168.1.X) and configured a static IP for a computer which would run the server.
@@ -34,7 +34,16 @@ This command begins the DNS certification process I used through Let's Encrypt.
 certbot -d www.mywebsite.com --manual --preferred-challenges dns certonly
 ```
 
+Note: The project is set-up by default to use public STUN and TURN services. There
+are security vulnerabilities to this(particularly TURN) and if you are interested in
+hosting your own STUN/TURN, it is incredibly simple using [coturn](https://github.com/coturn/coturn).
+
 ## Set-up
+
+You'll need a website to host this service on. I recommend nginx because I found
+it reliable and easy to begin with. I found [this tutorial](https://linuxize.com/post/how-to-set-up-nginx-server-blocks-on-debian-9/)
+to be a helpful and speedy nginx intro. I've included my simple server config in
+the repo as nginxserver.config.example.
 
 After cloning the repo and obtaining a domain with certification, you'll need to
 edit two files.
@@ -42,6 +51,8 @@ edit two files.
 First, open ProjectInfo.ts.example.
 You will need to type in your domain information as well as the location of
 your HTTPS certificates.
+Note that there is a boolean variable specifying if the clients and host are all
+on the same internet network.
 
 Second, open project_info.sh.
 Type in the location of your website's directory so that the files can be
