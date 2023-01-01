@@ -18,9 +18,9 @@
     "eslint-config-prettier": "^4.3.0",
     "eslint-plugin-prettier": "^3.1.0",
     "prettier": "1.17.1",
-    "ts-loader": "^6.0.0",
-    "webpack": "^4.31.0",
-    "webpack-cli": "^3.3.2"
+    "ts-loader": "^9.4.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   },
   "scripts": {
     "start": "./scripts/start-server.sh",
